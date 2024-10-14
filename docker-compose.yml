@@ -1,0 +1,16 @@
+version: '3.8'
+name: event-management
+services:
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_DATABASE=practice
+      - MYSQL_ROOT_PASSWORD=123456789*
+    ports:
+      - '3306:3306'
+volumes:
+  test_vol:
+    driver: local
+
+networks:
+  springapimysql-net:
