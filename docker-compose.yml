@@ -8,9 +8,7 @@ services:
       - MYSQL_ROOT_PASSWORD=123456789*
     ports:
       - '3306:3306'
+#    network_mode: host
 volumes:
   test_vol:
     driver: local
-
-networks:
-  springapimysql-net:
