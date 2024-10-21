@@ -1,0 +1,28 @@
+package com.example.backendeventmanagementbooking.utils;
+
+import com.example.backendeventmanagementbooking.exception.AuthException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+@ControllerAdvice
+public class CustomExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<GenericResponse<Object>> methodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        return new GenericResponse<>(ex.getBindingResult().getAllErrors().getFirst().getDefaultMessage(), HttpStatus.BAD_REQUEST).GenerateResponse();
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<GenericResponse<Object>> authenticationException(AuthException ex) {
+        return new GenericResponse<>(ex.getMessage(), HttpStatus.UNAUTHORIZED).GenerateResponse();
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<GenericResponse<Object>> usernameNotFoundException(UsernameNotFoundException ex) {
+        return new GenericResponse<>(ex.getMessage(), HttpStatus.NOT_FOUND).GenerateResponse();
+    }
+}

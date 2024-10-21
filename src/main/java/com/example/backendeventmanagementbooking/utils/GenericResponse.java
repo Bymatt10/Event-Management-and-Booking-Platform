@@ -16,14 +16,6 @@ public class GenericResponse<T> {
     private String message;
     private HttpStatus status;
 
-    public static <T> ResponseEntity<GenericResponse<T>> GenerateResponse(HttpStatus status, T data) {
-        return ResponseEntity.status(status).body(new GenericResponse<>(data, status.getReasonPhrase(), status));
-    }
-
-    public ResponseEntity<GenericResponse<T>> GenerateResponse() {
-        return GenerateResponse(this.status, this.data);
-    }
-
     public GenericResponse(HttpStatus status) {
         this.status = status;
         this.message = status.getReasonPhrase();
@@ -35,7 +27,25 @@ public class GenericResponse<T> {
         this.message = status.getReasonPhrase();
     }
 
+    public GenericResponse(String message, HttpStatus status) {
+        this.status = status;
+        this.message = message;
+    }
+
     public static <T> ResponseEntity<GenericResponse<T>> GenerateResponse(HttpStatus status) {
         return ResponseEntity.status(status).body(new GenericResponse<>(status));
     }
+
+    public static <T> ResponseEntity<GenericResponse<T>> GenerateResponse(HttpStatus status, T data) {
+        return ResponseEntity.status(status).body(new GenericResponse<>(data, status.getReasonPhrase(), status));
+    }
+
+    public static <T> ResponseEntity<GenericResponse<T>> GenerateResponse(HttpStatus status, String message, T data) {
+        return ResponseEntity.status(status).body(new GenericResponse<>(data, message, status));
+    }
+
+    public ResponseEntity<GenericResponse<T>> GenerateResponse() {
+        return GenerateResponse(this.status, this.message, this.data);
+    }
+
 }
