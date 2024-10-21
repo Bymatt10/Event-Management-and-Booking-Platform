@@ -1,18 +1,19 @@
 package com.example.backendeventmanagementbooking.controller;
 
+import com.example.backendeventmanagementbooking.domain.dto.request.UserChangePasswordDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserLoginDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserRequestDto;
+import com.example.backendeventmanagementbooking.domain.dto.response.UserChangePasswordResponse;
+import com.example.backendeventmanagementbooking.domain.dto.response.UserLoginResponseDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.UserResponseDto;
-import com.example.backendeventmanagementbooking.service.UserServiceInterface;
+import com.example.backendeventmanagementbooking.service.SecurityService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 import static com.example.backendeventmanagementbooking.utils.GenericResponse.GenerateResponse;
 
@@ -21,23 +22,22 @@ import static com.example.backendeventmanagementbooking.utils.GenericResponse.Ge
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserServiceInterface userService;
+    private final SecurityService securityService;
 
     @PostMapping("register")
     public ResponseEntity<GenericResponse<UserResponseDto>> registerUser(@RequestBody @Valid UserRequestDto userRequestDto) {
-        UserResponseDto userResponseDto = userService.registerUser(userRequestDto);
-        return GenerateResponse(HttpStatus.OK, userResponseDto);
+        return securityService.registerUser(userRequestDto).GenerateResponse();
+
     }
 
     @PostMapping("login")
-    public ResponseEntity<GenericResponse<String>> loginUser(@RequestBody @Valid UserLoginDto userLoginDto) {
-        var loginResponse = userService.login(userLoginDto);
-        if (loginResponse.isPresent()) {
-            String token = loginResponse.get().getToken();
-            return GenerateResponse(HttpStatus.OK, token);
-        } else {
-            return GenerateResponse(HttpStatus.UNAUTHORIZED, "Invalid username or password");
-        }
+    public ResponseEntity<GenericResponse<UserLoginResponseDto>> loginUser(@RequestBody @Valid UserLoginDto userLoginDto) {
+        return securityService.login(userLoginDto).GenerateResponse();
+    }
+
+    @PutMapping("change/password")
+    public GenericResponse<UserChangePasswordResponse> changePassword(@RequestBody @Valid UserChangePasswordDto userChangePasswordDto, UUID userId) {
+        return securityService.changePassword(userChangePasswordDto,userId);
     }
 
 }

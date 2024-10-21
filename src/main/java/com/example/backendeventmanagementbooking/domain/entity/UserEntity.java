@@ -33,10 +33,6 @@ public class UserEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    private RolesType role;
+    private RolesType role = RolesType.USER;
 
-    @JsonIgnore
-    public UUID getId() {
-        return this.userId;
-    }
 }
