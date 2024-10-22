@@ -1,7 +1,6 @@
 package com.example.backendeventmanagementbooking.domain.entity;
 
 import com.example.backendeventmanagementbooking.enums.RolesType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,7 +21,7 @@ public class UserEntity {
     @Column(name = "user_id", nullable = false, updatable = false)
     private UUID userId;
 
-    @Column(name = "username", nullable = false)
+    @Column(name = "username", unique = true, nullable = false)
     private String username;
 
     @Column(name = "email", nullable = false, unique = true)
@@ -30,6 +29,7 @@ public class UserEntity {
 
     @Column(name = "password", nullable = false)
     private String password;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
