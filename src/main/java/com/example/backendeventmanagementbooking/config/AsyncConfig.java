@@ -13,7 +13,7 @@ public class AsyncConfig {
 
     @Bean(name = {"async", "email"})
     public Executor asyncTaskExecutor() {
-        log.info("Task executor initialized");
+        log.info("Setting Task executor");
         var cpuCores = Runtime.getRuntime().availableProcessors();
         var poolSize = calculateCorePoolSize(cpuCores);
         var maxPoolSize = calculateMaxPoolSize(cpuCores);
@@ -29,6 +29,7 @@ public class AsyncConfig {
         executor.setQueueCapacity(queueCapacity);
         executor.setThreadNamePrefix("Async Thread - ");
         executor.initialize();
+        log.info("Task executor setup complete :)");
         return executor;
     }
 

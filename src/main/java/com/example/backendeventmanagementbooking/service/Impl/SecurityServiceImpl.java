@@ -42,31 +42,27 @@ public class SecurityServiceImpl implements SecurityService {
 
         var username = ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
 
-        var user = userRepository.findByUsername(username);
-        if (user.isEmpty()) {
-            throw new CustomException(HttpStatus.NOT_FOUND, "User not found");
-        }
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
 
-        if (!passwordEncoder.matches(userChangePasswordDto.oldPassword(), user.get().getPassword())) {
+        if (!passwordEncoder.matches(userChangePasswordDto.oldPassword(), user.getPassword())) {
             throw new CustomException(HttpStatus.FORBIDDEN, "The old password is incorrect");
         }
-        user.get().setPassword(passwordEncoder.encode(userChangePasswordDto.newPassword()));
-        userRepository.save(user.get());
+        user.setPassword(passwordEncoder.encode(userChangePasswordDto.newPassword()));
+        userRepository.save(user);
         return new GenericResponse<>(HttpStatus.OK);
     }
 
     public GenericResponse<UserLoginResponseDto> login(UserLoginDto userLoginDto) {
         var username = userLoginDto.getUsername();
-        var userEntity = userRepository.findByUsername(username);
-        if (userEntity.isEmpty()) {
-            throw new UsernameNotFoundException(username);
-        }
-        if (!passwordEncoder.matches(userLoginDto.getPassword(), userEntity.get().getPassword())) {
+        var userEntity = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(username));
+
+        if (!passwordEncoder.matches(userLoginDto.getPassword(), userEntity.getPassword())) {
             throw new BadCredentialsException(username);
         }
-        var userDetails = customUserDetailService.generateUserDetails(userEntity.get().getUsername(),
-                userEntity.get().getPassword(),
-                userEntity.get().getRole());
+        var userDetails = customUserDetailService.generateUserDetails(userEntity.getUsername(),
+                userEntity.getPassword(),
+                userEntity.getRole());
 
         var token = jwtUtil.generateToken(userDetails);
         return new GenericResponse<>(HttpStatus.OK, new UserLoginResponseDto(token));
