@@ -1,5 +1,6 @@
 package com.example.backendeventmanagementbooking.utils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,9 +13,13 @@ import org.springframework.http.ResponseEntity;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GenericResponse<T> {
-    private T data;
-    private String message;
+
+    @JsonIgnore
     private HttpStatus status;
+
+    private String message;
+
+    private T data;
 
     public GenericResponse(HttpStatus status) {
         this.status = status;
@@ -37,11 +42,11 @@ public class GenericResponse<T> {
     }
 
     public static <T> ResponseEntity<GenericResponse<T>> GenerateResponse(HttpStatus status, T data) {
-        return ResponseEntity.status(status).body(new GenericResponse<>(data, status.getReasonPhrase(), status));
+        return ResponseEntity.status(status).body(new GenericResponse<>(status, status.getReasonPhrase(), data));
     }
 
     public static <T> ResponseEntity<GenericResponse<T>> GenerateResponse(HttpStatus status, String message, T data) {
-        return ResponseEntity.status(status).body(new GenericResponse<>(data, message, status));
+        return ResponseEntity.status(status).body(new GenericResponse<>(status, message, data));
     }
 
     public ResponseEntity<GenericResponse<T>> GenerateResponse() {

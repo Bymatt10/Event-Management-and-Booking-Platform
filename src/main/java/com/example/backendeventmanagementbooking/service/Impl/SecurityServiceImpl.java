@@ -14,7 +14,9 @@ import com.example.backendeventmanagementbooking.security.JwtUtil;
 import com.example.backendeventmanagementbooking.service.SecurityService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class SecurityServiceImpl implements SecurityService {
 
     private final UserRepository userRepository;
@@ -32,14 +35,6 @@ public class SecurityServiceImpl implements SecurityService {
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailService customUserDetailService;
-
-    public SecurityServiceImpl(UserRepository userRepository, JwtUtil jwtUtil, ObjectMapper objectMapper, PasswordEncoder passwordEncoder, CustomUserDetailService customUserDetailService) {
-        this.userRepository = userRepository;
-        this.jwtUtil = jwtUtil;
-        this.objectMapper = objectMapper;
-        this.passwordEncoder = passwordEncoder;
-        this.customUserDetailService = customUserDetailService;
-    }
 
     @Override
     public GenericResponse<Object> changePassword(UserChangePasswordDto userChangePasswordDto) {
@@ -69,7 +64,10 @@ public class SecurityServiceImpl implements SecurityService {
         if (!passwordEncoder.matches(userLoginDto.getPassword(), userEntity.get().getPassword())) {
             throw new BadCredentialsException(username);
         }
-        var userDetails = customUserDetailService.generateUserDetails(userEntity.get().getUsername(), userEntity.get().getPassword(), userEntity.get().getRole());
+        var userDetails = customUserDetailService.generateUserDetails(userEntity.get().getUsername(),
+                userEntity.get().getPassword(),
+                userEntity.get().getRole());
+
         var token = jwtUtil.generateToken(userDetails);
         return new GenericResponse<>(HttpStatus.OK, new UserLoginResponseDto(token));
     }
@@ -86,17 +84,14 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     public GenericResponse<UserMeResponseDto> me() {
         var username = ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        var user = userRepository.findByUsername(username);
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(username));
 
-        if (user.isEmpty()) {
-            throw new CustomException(HttpStatus.NOT_FOUND, "User not found");
-        }
-
-        return new GenericResponse<>(HttpStatus.OK, new UserMeResponseDto(
-                user.get().getUserId().toString(),
-                user.get().getUsername(),
-                user.get().getEmail(),
-                user.get().getRole().toString()
-        ));
+        return new GenericResponse<>(HttpStatus.OK,
+                new UserMeResponseDto(user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole())
+        );
     }
 }
