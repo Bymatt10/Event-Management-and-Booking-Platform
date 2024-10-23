@@ -1,5 +1,6 @@
 package com.example.backendeventmanagementbooking.service.Impl;
 
+import com.example.backendeventmanagementbooking.domain.dto.request.EmailDetailsDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserChangePasswordDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserLoginDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserRequestDto;
@@ -12,6 +13,7 @@ import com.example.backendeventmanagementbooking.repository.UserRepository;
 import com.example.backendeventmanagementbooking.security.CustomUserDetailService;
 import com.example.backendeventmanagementbooking.security.JwtUtil;
 import com.example.backendeventmanagementbooking.service.SecurityService;
+import com.example.backendeventmanagementbooking.utils.EmailSender;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class SecurityServiceImpl implements SecurityService {
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailService customUserDetailService;
+    private final EmailSender emailSender;
 
     @Override
     public GenericResponse<Object> changePassword(UserChangePasswordDto userChangePasswordDto) {
@@ -73,6 +76,7 @@ public class SecurityServiceImpl implements SecurityService {
         userRequestDto.setPassword(passwordEncoder.encode(userRequestDto.getPassword()));
         var userEntity = objectMapper.convertValue(userRequestDto, UserEntity.class);
         var savedUser = userRepository.save(userEntity);
+        emailSender.sendMail(new EmailDetailsDto(savedUser.getEmail(),"hola","Bienvenido"));
         var response = objectMapper.convertValue(savedUser, UserResponseDto.class);
         return new GenericResponse<>(HttpStatus.OK, response);
     }
@@ -85,9 +89,9 @@ public class SecurityServiceImpl implements SecurityService {
 
         return new GenericResponse<>(HttpStatus.OK,
                 new UserMeResponseDto(user.getUserId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getRole())
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getRole())
         );
     }
 }
