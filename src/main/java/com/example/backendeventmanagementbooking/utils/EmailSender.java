@@ -1,10 +1,12 @@
 package com.example.backendeventmanagementbooking.utils;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EmailDetailsDto;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,15 +25,19 @@ public class EmailSender {
 
 
     @Async("email")
-    public void sendMail(EmailDetailsDto emailDetailsDto) {
+    public void sendMail(EmailDetailsDto emailDetailsDto) throws MessagingException {
         log.info("Sending email to:{}", emailDetailsDto.recipient());
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
+
+        var mimeMessage = mailSender.createMimeMessage();
+        var mailMessage = new MimeMessageHelper(mimeMessage, true);
 
         mailMessage.setFrom(sender);
         mailMessage.setTo(emailDetailsDto.recipient());
         mailMessage.setSubject(emailDetailsDto.subject());
-        mailMessage.setText(emailDetailsDto.msgBody());
-        mailSender.send(mailMessage);
+        mailMessage.setText(emailDetailsDto.msgBody(), true);
+
+        mailSender.send(mimeMessage);
+
         log.info("Email sent successfully");
     }
 

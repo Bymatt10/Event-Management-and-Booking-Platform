@@ -1,5 +1,6 @@
 package com.example.backendeventmanagementbooking.service.Impl;
 
+import com.example.backendeventmanagementbooking.domain.dto.common.BuildEmailDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EmailDetailsDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserChangePasswordDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserLoginDto;
@@ -8,14 +9,17 @@ import com.example.backendeventmanagementbooking.domain.dto.response.UserLoginRe
 import com.example.backendeventmanagementbooking.domain.dto.response.UserMeResponseDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.UserResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.UserEntity;
+import com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate;
 import com.example.backendeventmanagementbooking.exception.CustomException;
 import com.example.backendeventmanagementbooking.repository.UserRepository;
 import com.example.backendeventmanagementbooking.security.CustomUserDetailService;
 import com.example.backendeventmanagementbooking.security.JwtUtil;
 import com.example.backendeventmanagementbooking.service.SecurityService;
+import com.example.backendeventmanagementbooking.utils.BuildEmail;
 import com.example.backendeventmanagementbooking.utils.EmailSender;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +30,11 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.Date;
+
+import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.REGISTER_USER;
 
 @Service
 @Slf4j
@@ -38,6 +47,7 @@ public class SecurityServiceImpl implements SecurityService {
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailService customUserDetailService;
     private final EmailSender emailSender;
+    private final BuildEmail buildEmail;
 
     @Override
     public GenericResponse<Object> changePassword(UserChangePasswordDto userChangePasswordDto) {
@@ -72,11 +82,16 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     @Override
-    public GenericResponse<UserResponseDto> registerUser(UserRequestDto userRequestDto) {
+    public GenericResponse<UserResponseDto> registerUser(UserRequestDto userRequestDto) throws IOException, MessagingException {
         userRequestDto.setPassword(passwordEncoder.encode(userRequestDto.getPassword()));
         var userEntity = objectMapper.convertValue(userRequestDto, UserEntity.class);
         var savedUser = userRepository.save(userEntity);
-        emailSender.sendMail(new EmailDetailsDto(savedUser.getEmail(),"hola","Bienvenido"));
+        var bodyEmail = buildEmail.getTemplateEmail(REGISTER_USER,
+                new BuildEmailDto("#USERNAME", savedUser.getUsername()),
+                new BuildEmailDto("#Date", new Date().toString())
+        );
+        emailSender.sendMail(new EmailDetailsDto(savedUser.getEmail(), bodyEmail, "Bienvenido"));
+
         var response = objectMapper.convertValue(savedUser, UserResponseDto.class);
         return new GenericResponse<>(HttpStatus.OK, response);
     }
