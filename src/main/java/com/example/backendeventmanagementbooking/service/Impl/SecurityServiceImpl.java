@@ -9,8 +9,8 @@ import com.example.backendeventmanagementbooking.domain.dto.response.UserLoginRe
 import com.example.backendeventmanagementbooking.domain.dto.response.UserMeResponseDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.UserResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.UserEntity;
-import com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate;
 import com.example.backendeventmanagementbooking.exception.CustomException;
+import com.example.backendeventmanagementbooking.repository.ProfileRepository;
 import com.example.backendeventmanagementbooking.repository.UserRepository;
 import com.example.backendeventmanagementbooking.security.CustomUserDetailService;
 import com.example.backendeventmanagementbooking.security.JwtUtil;
@@ -42,6 +42,7 @@ import static com.example.backendeventmanagementbooking.enums.EmailFileNameTempl
 public class SecurityServiceImpl implements SecurityService {
 
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
@@ -84,7 +85,8 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     public GenericResponse<UserResponseDto> registerUser(UserRequestDto userRequestDto) throws IOException, MessagingException {
         userRequestDto.setPassword(passwordEncoder.encode(userRequestDto.getPassword()));
-        var userEntity = objectMapper.convertValue(userRequestDto, UserEntity.class);
+        var userEntity = new UserEntity(userRequestDto);
+        userEntity.setProfile(profileRepository.save(userEntity.getProfile()));
         var savedUser = userRepository.save(userEntity);
         var bodyEmail = buildEmail.getTemplateEmail(REGISTER_USER,
                 new BuildEmailDto("#USERNAME", savedUser.getUsername()),
@@ -106,7 +108,10 @@ public class SecurityServiceImpl implements SecurityService {
                 new UserMeResponseDto(user.getUserId(),
                         user.getUsername(),
                         user.getEmail(),
-                        user.getRole())
+                        user.getRole(),
+                        user.getProfile().getFullName(),
+                        user.getProfile().getIdentification(),
+                        user.getProfile().getPhoneNumber())
         );
     }
 }

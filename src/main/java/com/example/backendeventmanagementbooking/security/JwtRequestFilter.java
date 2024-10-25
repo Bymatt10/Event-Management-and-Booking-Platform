@@ -4,9 +4,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
@@ -22,18 +22,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final CustomUserDetailService customUserDetailService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain)
             throws ServletException, IOException {
-
-        // Exclude certain paths from JWT validation
-        String requestURI = request.getRequestURI();
-        if (requestURI.equals("/api/v1/user/register") || requestURI.startsWith("/swagger-ui") || requestURI.startsWith("/v3/api-docs")) {
-            chain.doFilter(request, response);
-            return;  // Skip JWT validation for these paths
-        }
-
         final var authorizationHeader = request.getHeader("Authorization");
 
         var username = "";
