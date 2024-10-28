@@ -69,11 +69,12 @@ public class SecurityServiceImpl implements SecurityService {
     public GenericResponse<UserLoginResponseDto> login(UserLoginDto userLoginDto) {
         var username = userLoginDto.getUsername();
         var userEntity = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(username));
+                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
         if (!passwordEncoder.matches(userLoginDto.getPassword(), userEntity.getPassword())) {
             throw new BadCredentialsException(username);
         }
+
         var userDetails = customUserDetailService.generateUserDetails(userEntity.getUsername(),
                 userEntity.getPassword(),
                 userEntity.getRole());

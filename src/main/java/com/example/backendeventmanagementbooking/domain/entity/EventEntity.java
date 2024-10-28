@@ -1,0 +1,61 @@
+package com.example.backendeventmanagementbooking.domain.entity;
+
+import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity(name = "event")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EventEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
+    private String description;
+
+    private String pathImage;
+
+    @Column(nullable = false)
+    private LocalDateTime startDate;
+
+    @Column(nullable = false)
+    private LocalDateTime endDate;
+
+    @Column(nullable = false)
+    private String location;
+
+    @Column(nullable = false)
+    private int capacity;
+
+    @Column(nullable = false)
+    private double price;
+
+    @Column(nullable = false)
+    private String typeEvent;
+
+
+    public EventEntity(EventDto eventDto) {
+        this.title = eventDto.getTitle();
+        this.description = eventDto.getDescription();
+        this.pathImage = eventDto.getPathImage();
+        this.startDate = eventDto.getStartDate();
+        this.endDate = eventDto.getEndDate();
+        this.location = eventDto.getLocation();
+        this.capacity = eventDto.getCapacity();
+        this.price = eventDto.getPrice();
+        this.typeEvent = eventDto.getTypeEvent();
+    }
+}
