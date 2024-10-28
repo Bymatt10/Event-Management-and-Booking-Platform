@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity(name = "event")
@@ -29,10 +29,10 @@ public class EventEntity {
     private String pathImage;
 
     @Column(nullable = false)
-    private LocalDateTime startDate;
+    private Date startDate;
 
     @Column(nullable = false)
-    private LocalDateTime endDate;
+    private Date endDate;
 
     @Column(nullable = false)
     private String location;

@@ -1,8 +1,8 @@
 package com.example.backendeventmanagementbooking.domain.entity;
 
-import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class EventCategoryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,8 +23,4 @@ public class EventCategoryEntity {
     @ManyToOne(targetEntity = CategoryEntity.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable = false)
     private CategoryEntity category;
-
-    public EventCategoryEntity(EventDto eventDto) {
-        this.id = eventDto.getIdCategory();
-    }
 }

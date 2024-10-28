@@ -2,8 +2,11 @@ package com.example.backendeventmanagementbooking.service.Impl;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
+import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
 import com.example.backendeventmanagementbooking.domain.entity.EventEntity;
+import com.example.backendeventmanagementbooking.exception.CustomException;
 import com.example.backendeventmanagementbooking.repository.EventRepository;
+import com.example.backendeventmanagementbooking.service.CategoryService;
 import com.example.backendeventmanagementbooking.service.EventService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,17 +23,23 @@ import org.springframework.stereotype.Service;
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
-
+    private final CategoryService categoryService;
     private final ObjectMapper objectMapper;
-
 
     @Override
     public GenericResponse<EventResponseDto> saveEvent(EventDto eventDto) {
-        log.info("Attempting to find Category with ID: {}", eventDto.getIdCategory());
         var eventEntity = new EventEntity(eventDto);
+        if (eventDto.getEndDate().before(eventEntity.getStartDate())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST, "End date cannot be before start date");
+        }
         var savedEvent = eventRepository.save(eventEntity);
+        var categories = categoryService.saveOrGetCategoryList(eventDto.getCategories(), savedEvent)
+                .stream()
+                .map(CategoryEntity::getName)
+                .toList();
 
         var response = objectMapper.convertValue(savedEvent, EventResponseDto.class);
+        response.setCategories(categories);
         return new GenericResponse<>(HttpStatus.OK, response);
     }
 

@@ -3,7 +3,8 @@ package com.example.backendeventmanagementbooking.domain.dto.request;
 import com.example.backendeventmanagementbooking.annotations.NotBlankWithFieldName;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
 
 @Data
 public class EventDto {
@@ -16,13 +17,10 @@ public class EventDto {
     private String pathImage;
 
     @NotBlankWithFieldName
-    private Long idCategory;
+    private Date startDate;
 
     @NotBlankWithFieldName
-    private LocalDateTime startDate;
-
-    @NotBlankWithFieldName
-    private LocalDateTime endDate;
+    private Date endDate;
 
     private String location;
 
@@ -34,4 +32,7 @@ public class EventDto {
 
     @NotBlankWithFieldName
     private String typeEvent;
+
+    @NotBlankWithFieldName
+    private List<String> categories;
 }

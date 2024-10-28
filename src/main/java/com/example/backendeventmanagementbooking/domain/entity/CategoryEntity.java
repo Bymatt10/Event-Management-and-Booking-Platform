@@ -16,13 +16,9 @@ import java.util.UUID;
 public class CategoryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID idCategory;
+    private UUID id;
 
-    @Column(nullable = false)
-    private String categoryName;
-
-    @Column(nullable = false)
-    private String categoryType;
-
+    @Column(nullable = false, unique = true)
+    private String name;
 }
 

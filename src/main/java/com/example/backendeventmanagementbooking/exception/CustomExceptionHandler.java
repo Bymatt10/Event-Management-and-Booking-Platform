@@ -1,6 +1,6 @@
-package com.example.backendeventmanagementbooking.utils;
+package com.example.backendeventmanagementbooking.exception;
 
-import com.example.backendeventmanagementbooking.exception.AuthException;
+import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,5 +24,10 @@ public class CustomExceptionHandler {
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<GenericResponse<Object>> usernameNotFoundException(UsernameNotFoundException ex) {
         return new GenericResponse<>(ex.getMessage(), HttpStatus.NOT_FOUND).GenerateResponse();
+    }
+
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<GenericResponse<Object>> customException(CustomException ex) {
+        return ex.getGenericResponse().GenerateResponse();
     }
 }
