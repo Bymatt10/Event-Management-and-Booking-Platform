@@ -1,6 +1,7 @@
 package com.example.backendeventmanagementbooking.domain.dto.request;
 
 import com.example.backendeventmanagementbooking.annotations.NotBlankWithFieldName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
@@ -17,9 +18,11 @@ public class EventDto {
     private String pathImage;
 
     @NotBlankWithFieldName
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "UTC")
     private Date startDate;
 
     @NotBlankWithFieldName
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "UTC")
     private Date endDate;
 
     private String location;

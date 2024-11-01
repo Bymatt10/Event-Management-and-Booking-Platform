@@ -16,6 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Service
 
 @Slf4j
@@ -33,6 +37,7 @@ public class EventServiceImpl implements EventService {
             throw new CustomException(HttpStatus.BAD_REQUEST, "End date cannot be before start date");
         }
         var savedEvent = eventRepository.save(eventEntity);
+
         var categories = categoryService.saveOrGetCategoryList(eventDto.getCategories(), savedEvent)
                 .stream()
                 .map(CategoryEntity::getName)
@@ -45,8 +50,11 @@ public class EventServiceImpl implements EventService {
 
 
     @Override
-    public GenericResponse<EventDto> deleteEvent() {
-        return null;
+    public GenericResponse<EventDto> deleteEvent(UUID uuid) {
+        var eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
+        eventRepository.delete(eventEntity);
+        return new GenericResponse<>(HttpStatus.OK, null);
     }
 
     @Override
@@ -55,17 +63,27 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public GenericResponse<EventDto> findEventById() {
-        return null;
+    public GenericResponse<EventResponseDto> findEventById(UUID uuid) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found with UUID: " + uuid));
+
+        EventResponseDto response = objectMapper.convertValue(eventEntity, EventResponseDto.class);
+        return new GenericResponse<>(HttpStatus.OK, response);
     }
 
-    @Override
-    public GenericResponse<EventDto> findAllEvents() {
-        return null;
-    }
 
     @Override
-    public GenericResponse<EventDto> findAllEventsByUserId() {
+    public GenericResponse<List<EventResponseDto>> findAllEvents() {
+        List<EventEntity> events = eventRepository.findAll();
+        List<EventResponseDto> eventDto = events.stream()
+                .map(event -> objectMapper.convertValue(event, EventResponseDto.class))
+                .collect(Collectors.toList());
+        return new GenericResponse<>(HttpStatus.OK, eventDto);
+    }
+
+
+    @Override
+    public GenericResponse<EventDto> findAllEventsByUserId(UUID userId) {
         return null;
     }
 
