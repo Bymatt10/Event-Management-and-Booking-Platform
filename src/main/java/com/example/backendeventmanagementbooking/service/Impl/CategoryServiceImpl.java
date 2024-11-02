@@ -50,4 +50,12 @@ public class CategoryServiceImpl implements CategoryService {
         return list;
     }
 
+    @Override
+    public List<String> getCategoryNameByEvent(EventEntity savedEvent) {
+        return eventCategoryRepository.findByEvent(savedEvent)
+                .stream()
+                .map(eventCategoryEntity -> eventCategoryEntity.getCategory().getName())
+                .toList();
+    }
+
 }

@@ -3,8 +3,10 @@ package com.example.backendeventmanagementbooking.service;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
+import com.example.backendeventmanagementbooking.utils.PaginationUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface EventService {
@@ -16,7 +18,7 @@ public interface EventService {
 
     GenericResponse<EventResponseDto> findEventById(UUID uuid);
 
-    GenericResponse<List<EventResponseDto>>findAllEvents();
+    ResponseEntity<GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>>> findAllEvents(PageRequest pageRequest);
 
     GenericResponse<EventDto> findAllEventsByUserId(UUID userId);
 

@@ -9,4 +9,5 @@ public interface CategoryService {
 
     List<CategoryEntity> saveOrGetCategoryList(List<String> categoryNameList, EventEntity savedEvent);
 
+    List<String> getCategoryNameByEvent(EventEntity savedEvent);
 }

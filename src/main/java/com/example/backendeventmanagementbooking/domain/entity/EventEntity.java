@@ -46,8 +46,11 @@ public class EventEntity {
     @Column(nullable = false)
     private String typeEvent;
 
+    @ManyToOne(targetEntity = UserEntity.class)
+    @JoinColumn(nullable = false)
+    private UserEntity user;
 
-    public EventEntity(EventDto eventDto) {
+    public EventEntity(EventDto eventDto, UserEntity user) {
         this.title = eventDto.getTitle();
         this.description = eventDto.getDescription();
         this.pathImage = eventDto.getPathImage();
@@ -57,5 +60,6 @@ public class EventEntity {
         this.capacity = eventDto.getCapacity();
         this.price = eventDto.getPrice();
         this.typeEvent = eventDto.getTypeEvent();
+        this.user = user;
     }
 }

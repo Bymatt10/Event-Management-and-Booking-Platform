@@ -14,6 +14,7 @@ import com.example.backendeventmanagementbooking.repository.ProfileRepository;
 import com.example.backendeventmanagementbooking.repository.UserRepository;
 import com.example.backendeventmanagementbooking.security.CustomUserDetailService;
 import com.example.backendeventmanagementbooking.security.JwtUtil;
+import com.example.backendeventmanagementbooking.security.SecurityTools;
 import com.example.backendeventmanagementbooking.service.SecurityService;
 import com.example.backendeventmanagementbooking.utils.BuildEmail;
 import com.example.backendeventmanagementbooking.utils.EmailSender;
@@ -49,6 +50,7 @@ public class SecurityServiceImpl implements SecurityService {
     private final CustomUserDetailService customUserDetailService;
     private final EmailSender emailSender;
     private final BuildEmail buildEmail;
+    private final SecurityTools securityTools;
 
     @Override
     public GenericResponse<Object> changePassword(UserChangePasswordDto userChangePasswordDto) {
@@ -101,9 +103,7 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public GenericResponse<UserMeResponseDto> me() {
-        var username = ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        var user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(username));
+        var user = securityTools.getCurrentUser();
 
         return new GenericResponse<>(HttpStatus.OK,
                 new UserMeResponseDto(user.getUserId(),
