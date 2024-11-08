@@ -36,7 +36,12 @@ public class EventController {
     }
 
     @DeleteMapping("{uuid}")
-    public ResponseEntity<GenericResponse<EventDto>> deleteEvent(@PathVariable UUID uuid) {
+    public ResponseEntity<GenericResponse<Object>> deleteEvent(@PathVariable UUID uuid) {
         return eventService.deleteEvent(uuid).GenerateResponse();
+    }
+
+    @GetMapping("{userId}")
+    public ResponseEntity<GenericResponse<EventDto>> findAllEventsByUserId(@PathVariable UUID userId) {
+        return eventService.findAllEventsByUserId(userId).GenerateResponse();
     }
 }

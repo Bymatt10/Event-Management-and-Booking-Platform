@@ -10,4 +10,5 @@ import java.util.UUID;
 
 public interface EventRepository extends JpaRepository<EventEntity, UUID> {
     Page<EventEntity> findAllByUser(Pageable pageable, UserEntity user);
+    EventEntity findAllEventsByUserId(UUID eventId);
 }

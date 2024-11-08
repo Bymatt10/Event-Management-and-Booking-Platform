@@ -1,5 +1,6 @@
 package com.example.backendeventmanagementbooking.domain.entity;
 
+import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,5 +21,10 @@ public class CategoryEntity {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+     public CategoryEntity(EventUpdatedDto.CategoriesUpdated categoriesUpdated) {
+        this.id = categoriesUpdated.getUuidCategory();
+        this.name = categoriesUpdated.getName();
+    }
 }
 

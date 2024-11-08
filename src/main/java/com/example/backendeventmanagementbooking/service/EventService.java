@@ -1,6 +1,7 @@
 package com.example.backendeventmanagementbooking.service;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
@@ -12,9 +13,9 @@ import java.util.UUID;
 public interface EventService {
     GenericResponse<EventResponseDto> saveEvent(EventDto eventDto);
 
-    GenericResponse<EventDto> deleteEvent(UUID uuid);
+    GenericResponse<Object> deleteEvent(UUID uuid);
 
-    GenericResponse<EventDto> updateEvent();
+    GenericResponse<EventUpdatedDto> updateEvent(UUID uuid, EventUpdatedDto eventUpdatedDto);
 
     GenericResponse<EventResponseDto> findEventById(UUID uuid);
 

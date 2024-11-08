@@ -1,13 +1,21 @@
 package com.example.backendeventmanagementbooking.domain.dto.request;
 
 import com.example.backendeventmanagementbooking.annotations.NotBlankWithFieldName;
+import com.example.backendeventmanagementbooking.enums.StatusEvent;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Data
-public class EventDto {
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class EventUpdatedDto {
     @NotBlankWithFieldName
     private String title;
 
@@ -34,5 +42,22 @@ public class EventDto {
     private String typeEvent;
 
     @NotBlankWithFieldName
-    private List<String> categories;
+    private StatusEvent statusEvent;
+
+    @NotBlankWithFieldName
+    private List<CategoriesUpdated> categoriesUpdated;
+
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class CategoriesUpdated {
+
+        @NotBlankWithFieldName
+        private UUID uuidCategory;
+
+        @NotBlankWithFieldName
+        private String name;
+    }
 }
