@@ -11,5 +11,4 @@ public interface CategoryService {
 
     List<String> getCategoryNameByEvent(EventEntity savedEvent);
 
-    void saveOrGetCategoryList(CategoryEntity categoryEntity);
 }

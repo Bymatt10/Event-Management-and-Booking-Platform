@@ -23,9 +23,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pageableRepositoryPaginationDto;
 
@@ -60,7 +62,6 @@ public class EventServiceImpl implements EventService {
         return new GenericResponse<>(HttpStatus.OK, response);
     }
 
-
     @Override
     public GenericResponse<Object> deleteEvent(UUID uuid) {
         var eventEntity = eventRepository.findById(uuid)
@@ -85,28 +86,26 @@ public class EventServiceImpl implements EventService {
         eventEntity.setPathImage(eventUpdatedDto.getPathImage());
         eventEntity.setStartDate(eventUpdatedDto.getStartDate());
         eventEntity.setEndDate(eventUpdatedDto.getEndDate());
-        eventEntity.setLocation(eventUpdatedDto.getLocation());  // Removed duplicate
+        eventEntity.setLocation(eventUpdatedDto.getLocation());
         eventEntity.setCapacity(eventUpdatedDto.getCapacity());
         eventEntity.setPrice(eventUpdatedDto.getPrice());
         eventEntity.setTypeEvent(eventUpdatedDto.getTypeEvent());
         eventEntity.setStatus(StatusEvent.ACTIVE);
+        eventRepository.save(eventEntity);
 
-        List<CategoryEntity> updatedCategories = new ArrayList<>();
-        for (EventUpdatedDto.CategoriesUpdated categoriesUpdatedDto : eventUpdatedDto.getCategoriesUpdated()) {
-            CategoryEntity categoryEntity = categoryRepository.findById(categoriesUpdatedDto.getUuidCategory())
-                    .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Category not found"));
+        List<CategoryEntity> categoryEntities = Optional.ofNullable(eventUpdatedDto.getCategoriesUpdated())
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(category -> {
+                    CategoryEntity categoryEntity = new CategoryEntity();
+                    categoryEntity.setName(category);
+                    return categoryEntity;
+                })
+                .collect(Collectors.toList());
 
-            categoryEntity.setName(categoriesUpdatedDto.getName());
-            categoryService.saveOrGetCategoryList(categoryEntity);
-            updatedCategories.add(categoryEntity);
-        }
-//
-//        eventEntity.setCategories(updatedCategories);
-//        eventRepository.save(eventEntity);
-
+        categoryRepository.saveAll(categoryEntities);
         return new GenericResponse<>(HttpStatus.OK, eventUpdatedDto);
     }
-
 
     @Override
     public GenericResponse<EventResponseDto> findEventById(UUID uuid) {
@@ -118,7 +117,6 @@ public class EventServiceImpl implements EventService {
         response.setCategories(categories);
         return new GenericResponse<>(HttpStatus.OK, response);
     }
-
 
     @Override
     public ResponseEntity<GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>>> findAllEvents(PageRequest pageRequest) {
@@ -138,32 +136,40 @@ public class EventServiceImpl implements EventService {
         return new GenericResponse<>(HttpStatus.OK, dto).GenerateResponse();
     }
 
-
     @Override
-    public GenericResponse findAllEventsByUserId(UUID userId) {
-        var user = securityTools.getCurrentUser();
-        EventEntity eventEntity = eventRepository.findAllEventsByUserId(user.getUserId());
-        return objectMapper.convertValue(eventEntity, GenericResponse.class);
+    public GenericResponse<EventDto> changeDate(UUID uuid, EventUpdatedDto eventUpdatedDto) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
 
+        eventEntity.setStartDate(eventUpdatedDto.getStartDate());
+        eventEntity.setEndDate(eventUpdatedDto.getEndDate());
+        return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 
     @Override
-    public GenericResponse<EventDto> changeDate() {
-        return null;
+    public GenericResponse<EventDto> changeLocation(UUID uuid, EventUpdatedDto eventUpdatedDto) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        eventEntity.setLocation(eventUpdatedDto.getLocation());
+        return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 
     @Override
-    public GenericResponse<EventDto> changeLocation() {
-        return null;
+    public GenericResponse<EventDto> changePrice(UUID uuid, EventUpdatedDto eventUpdatedDt) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        eventEntity.setPrice(eventUpdatedDt.getPrice());
+        return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 
     @Override
-    public GenericResponse<EventDto> changePrice() {
-        return null;
-    }
+    public GenericResponse<EventDto> changeCapacity(UUID uuid, EventUpdatedDto eventUpdatedDt) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
 
-    @Override
-    public GenericResponse<EventDto> changeCapacity() {
-        return null;
+        eventEntity.setCapacity(eventUpdatedDt.getCapacity());
+        return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 }

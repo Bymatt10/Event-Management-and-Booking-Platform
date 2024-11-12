@@ -22,9 +22,8 @@ public class CategoryEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
-     public CategoryEntity(EventUpdatedDto.CategoriesUpdated categoriesUpdated) {
-        this.id = categoriesUpdated.getUuidCategory();
-        this.name = categoriesUpdated.getName();
+
+    public CategoryEntity(EventUpdatedDto category) {
     }
 }
 

@@ -1,6 +1,7 @@
 package com.example.backendeventmanagementbooking.controller;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.service.EventService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
@@ -40,8 +41,8 @@ public class EventController {
         return eventService.deleteEvent(uuid).GenerateResponse();
     }
 
-    @GetMapping("{userId}")
-    public ResponseEntity<GenericResponse<EventDto>> findAllEventsByUserId(@PathVariable UUID userId) {
-        return eventService.findAllEventsByUserId(userId).GenerateResponse();
+    @PutMapping("updated/{uuid}")
+    public ResponseEntity<GenericResponse<EventUpdatedDto>> updateEvent(@PathVariable UUID uuid, @RequestBody EventUpdatedDto eventUpdatedDto) {
+        return eventService.updateEvent(uuid, eventUpdatedDto).GenerateResponse();
     }
 }

@@ -9,14 +9,13 @@ import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     @Query(value = """
-            SELECT *
-            from user
-                     JOIN practice.profile p on p.uuid = user.profile_uuid
-            where username = :username
-               OR email = :username
+            SELECT u.*
+            FROM user u
+                     JOIN profile p ON p.uuid = u.profile_uuid
+            WHERE u.username = :username
+               OR u.email = :username
                OR p.identification = :username
-
-            """ ,nativeQuery = true)
+            """, nativeQuery = true)
     Optional<UserEntity> findByUsername(String username);
 
 

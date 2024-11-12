@@ -21,14 +21,12 @@ public interface EventService {
 
     ResponseEntity<GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>>> findAllEvents(PageRequest pageRequest);
 
-    GenericResponse<EventDto> findAllEventsByUserId(UUID userId);
+    GenericResponse<EventDto> changeDate(UUID uuid, EventUpdatedDto eventUpdatedDto);
 
-    GenericResponse<EventDto> changeDate();
+    GenericResponse<EventDto> changeLocation(UUID uuid, EventUpdatedDto eventUpdatedDto);
 
-    GenericResponse<EventDto> changeLocation();
+    GenericResponse<EventDto> changePrice(UUID uuid, EventUpdatedDto eventUpdatedDto);
 
-    GenericResponse<EventDto> changePrice();
-
-    GenericResponse<EventDto> changeCapacity();
+    GenericResponse<EventDto> changeCapacity(UUID uuid, EventUpdatedDto eventUpdatedDto);
 
 }

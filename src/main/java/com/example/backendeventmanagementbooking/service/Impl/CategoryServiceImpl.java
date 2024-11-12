@@ -56,9 +56,6 @@ public class CategoryServiceImpl implements CategoryService {
                 .toList();
     }
 
-    @Override
-    public void saveOrGetCategoryList(CategoryEntity categoryEntity) {
 
-    }
 
 }
