@@ -42,7 +42,7 @@ public class EventController {
     }
 
     @PutMapping("updated/{uuid}")
-    public ResponseEntity<GenericResponse<EventUpdatedDto>> updateEvent(@PathVariable UUID uuid, @RequestBody EventUpdatedDto eventUpdatedDto) {
+    public ResponseEntity<GenericResponse<EventResponseDto>> updateEvent(@PathVariable UUID uuid, @RequestBody EventUpdatedDto eventUpdatedDto) {
         return eventService.updateEvent(uuid, eventUpdatedDto).GenerateResponse();
     }
 }

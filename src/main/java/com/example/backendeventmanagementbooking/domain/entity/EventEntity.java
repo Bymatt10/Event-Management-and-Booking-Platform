@@ -85,5 +85,21 @@ public class EventEntity {
         this.status =ACTIVE;
     }
 
+    public EventEntity fromEventUpdateDto(EventUpdatedDto eventUpdatedDto, UUID uuid) {
+        var eventEntity = this;
+        eventEntity.setTitle(eventUpdatedDto.getTitle());
+        eventEntity.setDescription(eventUpdatedDto.getDescription());
+        eventEntity.setPathImage(eventUpdatedDto.getPathImage());
+        eventEntity.setStartDate(eventUpdatedDto.getStartDate());
+        eventEntity.setEndDate(eventUpdatedDto.getEndDate());
+        eventEntity.setLocation(eventUpdatedDto.getLocation());
+        eventEntity.setCapacity(eventUpdatedDto.getCapacity());
+        eventEntity.setPrice(eventUpdatedDto.getPrice());
+        eventEntity.setTypeEvent(eventUpdatedDto.getTypeEvent());
+        eventEntity.setStatus(StatusEvent.ACTIVE);
+        eventEntity.setUuid(uuid);
+        return eventEntity;
+    }
+
 
 }

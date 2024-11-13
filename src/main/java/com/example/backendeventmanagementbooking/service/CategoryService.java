@@ -11,4 +11,6 @@ public interface CategoryService {
 
     List<String> getCategoryNameByEvent(EventEntity savedEvent);
 
+    List<String> updateCategoryNameByEvent(List<String> categoryNameList, EventEntity savedEvent);
+
 }

@@ -15,7 +15,7 @@ public interface EventService {
 
     GenericResponse<Object> deleteEvent(UUID uuid);
 
-    GenericResponse<EventUpdatedDto> updateEvent(UUID uuid, EventUpdatedDto eventUpdatedDto);
+    GenericResponse<EventResponseDto> updateEvent(UUID uuid, EventUpdatedDto eventUpdatedDto);
 
     GenericResponse<EventResponseDto> findEventById(UUID uuid);
 

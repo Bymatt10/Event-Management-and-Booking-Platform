@@ -7,7 +7,6 @@ import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
 import com.example.backendeventmanagementbooking.domain.entity.EventEntity;
 import com.example.backendeventmanagementbooking.enums.StatusEvent;
 import com.example.backendeventmanagementbooking.exception.CustomException;
-import com.example.backendeventmanagementbooking.repository.CategoryRepository;
 import com.example.backendeventmanagementbooking.repository.EventRepository;
 import com.example.backendeventmanagementbooking.security.SecurityTools;
 import com.example.backendeventmanagementbooking.service.CategoryService;
@@ -23,11 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pageableRepositoryPaginationDto;
 
@@ -39,7 +34,6 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final CategoryService categoryService;
-    private final CategoryRepository categoryRepository;
     private final ObjectMapper objectMapper;
     private final SecurityTools securityTools;
 
@@ -77,34 +71,19 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public GenericResponse<EventUpdatedDto> updateEvent(UUID uuid, EventUpdatedDto eventUpdatedDto) throws CustomException {
+    public GenericResponse<EventResponseDto> updateEvent(UUID uuid, EventUpdatedDto eventUpdatedDto) throws CustomException {
         EventEntity eventEntity = eventRepository.findById(uuid)
-                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"))
+                .fromEventUpdateDto(eventUpdatedDto, uuid);
 
-        eventEntity.setTitle(eventUpdatedDto.getTitle());
-        eventEntity.setDescription(eventUpdatedDto.getDescription());
-        eventEntity.setPathImage(eventUpdatedDto.getPathImage());
-        eventEntity.setStartDate(eventUpdatedDto.getStartDate());
-        eventEntity.setEndDate(eventUpdatedDto.getEndDate());
-        eventEntity.setLocation(eventUpdatedDto.getLocation());
-        eventEntity.setCapacity(eventUpdatedDto.getCapacity());
-        eventEntity.setPrice(eventUpdatedDto.getPrice());
-        eventEntity.setTypeEvent(eventUpdatedDto.getTypeEvent());
-        eventEntity.setStatus(StatusEvent.ACTIVE);
         eventRepository.save(eventEntity);
 
-        List<CategoryEntity> categoryEntities = Optional.ofNullable(eventUpdatedDto.getCategoriesUpdated())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(category -> {
-                    CategoryEntity categoryEntity = new CategoryEntity();
-                    categoryEntity.setName(category);
-                    return categoryEntity;
-                })
-                .collect(Collectors.toList());
+        var listCategories = categoryService.updateCategoryNameByEvent(eventUpdatedDto.getCategoriesUpdated(), eventEntity);
+        var response = objectMapper.convertValue(eventUpdatedDto, EventResponseDto.class);
+        response.setCategories(listCategories);
+        response.setUuid(uuid);
 
-        categoryRepository.saveAll(categoryEntities);
-        return new GenericResponse<>(HttpStatus.OK, eventUpdatedDto);
+        return new GenericResponse<>(HttpStatus.OK, response);
     }
 
     @Override

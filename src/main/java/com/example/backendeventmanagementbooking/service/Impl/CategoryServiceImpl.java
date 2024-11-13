@@ -56,6 +56,21 @@ public class CategoryServiceImpl implements CategoryService {
                 .toList();
     }
 
+    @Override
+    public List<String> updateCategoryNameByEvent(List<String> categoryNameList, EventEntity savedEvent) {
+        if (categoryNameList.isEmpty()) {
+            return null;
+        }
+        eventCategoryRepository.findByEvent(savedEvent)
+                .stream()
+                .parallel()
+                .forEach(eventCategoryRepository::delete);
+
+        return saveOrGetCategoryList(categoryNameList, savedEvent)
+                .stream()
+                .map(CategoryEntity::getName)
+                .toList();
+    }
 
 
 }
