@@ -1,13 +1,20 @@
 package com.example.backendeventmanagementbooking.domain.dto.request;
 
 import com.example.backendeventmanagementbooking.annotations.NotBlankWithFieldName;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
 
 @Data
-public class EventDto {
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class EventUpdatedDto {
+
     @NotBlankWithFieldName
     private String title;
 
@@ -34,5 +41,7 @@ public class EventDto {
     private String typeEvent;
 
     @NotBlankWithFieldName
-    private List<String> categories;
+    private List<String> categoriesUpdated;
+
+
 }

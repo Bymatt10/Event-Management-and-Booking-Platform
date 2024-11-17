@@ -1,9 +1,11 @@
 package com.example.backendeventmanagementbooking.service.Impl;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
 import com.example.backendeventmanagementbooking.domain.entity.EventEntity;
+import com.example.backendeventmanagementbooking.enums.StatusEvent;
 import com.example.backendeventmanagementbooking.exception.CustomException;
 import com.example.backendeventmanagementbooking.repository.EventRepository;
 import com.example.backendeventmanagementbooking.security.SecurityTools;
@@ -54,18 +56,34 @@ public class EventServiceImpl implements EventService {
         return new GenericResponse<>(HttpStatus.OK, response);
     }
 
-
     @Override
-    public GenericResponse<EventDto> deleteEvent(UUID uuid) {
+    public GenericResponse<Object> deleteEvent(UUID uuid) {
         var eventEntity = eventRepository.findById(uuid)
                 .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
-        eventRepository.delete(eventEntity);
-        return new GenericResponse<>(HttpStatus.OK, null);
+        eventEntity.setStatus(StatusEvent.INACTIVE);
+        var user = securityTools.getCurrentUser();
+        if (!user.getUsername().equals(eventEntity.getUser().getUsername())) {
+            throw new CustomException(HttpStatus.FORBIDDEN, "You do not have permission to delete this event");
+        }
+
+        eventRepository.save(eventEntity);
+        return new GenericResponse<>(HttpStatus.OK);
     }
 
     @Override
-    public GenericResponse<EventDto> updateEvent() {
-        return null;
+    public GenericResponse<EventResponseDto> updateEvent(UUID uuid, EventUpdatedDto eventUpdatedDto) throws CustomException {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"))
+                .fromEventUpdateDto(eventUpdatedDto, uuid);
+
+        eventRepository.save(eventEntity);
+
+        var listCategories = categoryService.updateCategoryNameByEvent(eventUpdatedDto.getCategoriesUpdated(), eventEntity);
+        var response = objectMapper.convertValue(eventUpdatedDto, EventResponseDto.class);
+        response.setCategories(listCategories);
+        response.setUuid(uuid);
+
+        return new GenericResponse<>(HttpStatus.OK, response);
     }
 
     @Override
@@ -79,16 +97,15 @@ public class EventServiceImpl implements EventService {
         return new GenericResponse<>(HttpStatus.OK, response);
     }
 
-
     @Override
     public ResponseEntity<GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>>> findAllEvents(PageRequest pageRequest) {
         var user = securityTools.getCurrentUser();
         var response = pageableRepositoryPaginationDto(eventRepository.findAllByUser(pageRequest, user));
         var transformation = response.getValue().stream().map(event -> {
-                    var res = objectMapper.convertValue(event, EventResponseDto.class);
-                    res.setCategories(categoryService.getCategoryNameByEvent(event));
-                    return res;
-                }).toList();
+            var res = objectMapper.convertValue(event, EventResponseDto.class);
+            res.setCategories(categoryService.getCategoryNameByEvent(event));
+            return res;
+        }).toList();
 
         var dto = new PaginationUtils.PaginationDto<>(transformation,
                 response.getCurrentPage(),
@@ -98,29 +115,40 @@ public class EventServiceImpl implements EventService {
         return new GenericResponse<>(HttpStatus.OK, dto).GenerateResponse();
     }
 
-
     @Override
-    public GenericResponse<EventDto> findAllEventsByUserId(UUID userId) {
-        return null;
+    public GenericResponse<EventDto> changeDate(UUID uuid, EventUpdatedDto eventUpdatedDto) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        eventEntity.setStartDate(eventUpdatedDto.getStartDate());
+        eventEntity.setEndDate(eventUpdatedDto.getEndDate());
+        return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 
     @Override
-    public GenericResponse<EventDto> changeDate() {
-        return null;
+    public GenericResponse<EventDto> changeLocation(UUID uuid, EventUpdatedDto eventUpdatedDto) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        eventEntity.setLocation(eventUpdatedDto.getLocation());
+        return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 
     @Override
-    public GenericResponse<EventDto> changeLocation() {
-        return null;
+    public GenericResponse<EventDto> changePrice(UUID uuid, EventUpdatedDto eventUpdatedDt) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        eventEntity.setPrice(eventUpdatedDt.getPrice());
+        return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 
     @Override
-    public GenericResponse<EventDto> changePrice() {
-        return null;
-    }
+    public GenericResponse<EventDto> changeCapacity(UUID uuid, EventUpdatedDto eventUpdatedDt) {
+        EventEntity eventEntity = eventRepository.findById(uuid)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
 
-    @Override
-    public GenericResponse<EventDto> changeCapacity() {
-        return null;
+        eventEntity.setCapacity(eventUpdatedDt.getCapacity());
+        return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 }

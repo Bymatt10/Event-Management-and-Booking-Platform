@@ -29,9 +29,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         for (String categoryName : categoryNameList) {
             var category = categoryRepository.findByName(categoryName);
-            if (category.isPresent()) {
-                list.add(category.get());
-            }
+            category.ifPresent(list::add);
 
             if (category.isEmpty()) {
                 list.add(categoryRepository.save(CategoryEntity.builder()
@@ -57,5 +55,22 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(eventCategoryEntity -> eventCategoryEntity.getCategory().getName())
                 .toList();
     }
+
+    @Override
+    public List<String> updateCategoryNameByEvent(List<String> categoryNameList, EventEntity savedEvent) {
+        if (categoryNameList.isEmpty()) {
+            return null;
+        }
+        eventCategoryRepository.findByEvent(savedEvent)
+                .stream()
+                .parallel()
+                .forEach(eventCategoryRepository::delete);
+
+        return saveOrGetCategoryList(categoryNameList, savedEvent)
+                .stream()
+                .map(CategoryEntity::getName)
+                .toList();
+    }
+
 
 }

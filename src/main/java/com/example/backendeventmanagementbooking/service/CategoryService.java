@@ -10,4 +10,7 @@ public interface CategoryService {
     List<CategoryEntity> saveOrGetCategoryList(List<String> categoryNameList, EventEntity savedEvent);
 
     List<String> getCategoryNameByEvent(EventEntity savedEvent);
+
+    List<String> updateCategoryNameByEvent(List<String> categoryNameList, EventEntity savedEvent);
+
 }
