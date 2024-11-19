@@ -1,9 +1,9 @@
 package com.example.backendeventmanagementbooking.domain.dto.common;
 
 import com.example.backendeventmanagementbooking.enums.QrUsage;
+import com.luigivismara.shortuuid.ShortUuid;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 /// `RESERVED/12313-13123123/899893-977973-93179/qr.png`
 ///
@@ -15,8 +15,8 @@ import java.util.UUID;
 /// @param endDate the endDate ttl for s3 file ### optional
 /// @param content the content render
 public record QrGeneratorDto(QrUsage qrUsage,
-                             UUID uuid,
-                             UUID reserve,
+                             ShortUuid uuid,
+                             ShortUuid reserve,
                              LocalDate endDate,
                              String content) {
 }
