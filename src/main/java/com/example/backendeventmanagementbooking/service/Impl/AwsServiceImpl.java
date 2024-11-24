@@ -2,6 +2,7 @@ package com.example.backendeventmanagementbooking.service.Impl;
 
 import com.example.backendeventmanagementbooking.domain.dto.common.FileUploadDto;
 import com.example.backendeventmanagementbooking.domain.dto.common.QrGeneratorDto;
+import com.example.backendeventmanagementbooking.enums.FilesExtensionTypes;
 import com.example.backendeventmanagementbooking.service.AwsService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.ImageUtils;
@@ -73,7 +74,7 @@ public class AwsServiceImpl implements AwsService {
                 .path(qrGeneratorDto.generatePathLocation())
                 .build();
 
-        var s3saved = s3Client.putObject(putObject, RequestBody.fromBytes(ImageUtils.toByteArray(file, "png")));
+        var s3saved = s3Client.putObject(putObject, RequestBody.fromBytes(ImageUtils.toByteArray(file, FilesExtensionTypes.PNG.name())));
         log.info("s3 location saved {}", s3saved);
         return new GenericResponse<>(HttpStatus.OK, fileUpload);
     }
