@@ -33,4 +33,4 @@ build/
 .vscode/
 .history/
 
-*.env!/src/main/resources/application-dev.properties
+!/src/main/resources/application-dev.properties
