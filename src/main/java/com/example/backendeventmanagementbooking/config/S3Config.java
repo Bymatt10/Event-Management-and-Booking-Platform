@@ -12,10 +12,10 @@ import java.net.URI;
 
 @Configuration
 public class S3Config {
-    @Value("${aws.accessKeyId}")
+    @Value("${aws.access.key.id}")
     private String accessKey;
 
-    @Value("${aws.secretKey}")
+    @Value("${aws.secret.key}")
     private String secretKey;
 
     @Value("${s3.endpoint}")

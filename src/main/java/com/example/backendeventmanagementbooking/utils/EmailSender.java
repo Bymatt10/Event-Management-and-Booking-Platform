@@ -22,7 +22,7 @@ public class EmailSender {
 
     @Async("email")
     public void sendMail(EmailDetailsDto emailDetailsDto) throws MessagingException {
-        log.info("Sending email to:{}", emailDetailsDto.recipient());
+        log.info("Sending email to:{} from {}", emailDetailsDto.recipient(), sender);
 
         var mimeMessage = mailSender.createMimeMessage();
         var mailMessage = new MimeMessageHelper(mimeMessage, true);

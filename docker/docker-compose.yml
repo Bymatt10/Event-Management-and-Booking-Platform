@@ -1,14 +1,47 @@
 version: '3.8'
-name: event-management
+
 services:
-  mysql:
+  event-book-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        - CACHEBUST=1
+    ports:
+      - '8080:8080'
+    depends_on:
+      - mysql-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/practice
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - S3_ENDPOINT=${S3_ENDPOINT}
+      - JAVA_OPTS=-Duser.timezone=UTC -Xms512m -Xmx1024m
+    network_mode: host
+
+  mysql-service:
     image: mysql:latest
     environment:
       - MYSQL_DATABASE=practice
       - MYSQL_ROOT_PASSWORD=123456789*
     ports:
       - '3306:3306'
-#    network_mode: host
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
 volumes:
-  test_vol:
+  mysql_data:
     driver: local
