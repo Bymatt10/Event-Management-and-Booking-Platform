@@ -2,14 +2,17 @@ package com.example.backendeventmanagementbooking.service.Impl;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
+import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
 import com.example.backendeventmanagementbooking.domain.entity.EventEntity;
+import com.example.backendeventmanagementbooking.enums.EventAccessType;
 import com.example.backendeventmanagementbooking.enums.StatusEvent;
 import com.example.backendeventmanagementbooking.exception.CustomException;
 import com.example.backendeventmanagementbooking.repository.EventRepository;
 import com.example.backendeventmanagementbooking.security.SecurityTools;
 import com.example.backendeventmanagementbooking.service.CategoryService;
+import com.example.backendeventmanagementbooking.service.EventGuestService;
 import com.example.backendeventmanagementbooking.service.EventService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
@@ -30,7 +33,7 @@ import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pa
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class EventServiceImpl implements EventService {
+public class EventServiceImpl implements EventService, EventGuestService {
 
     private final EventRepository eventRepository;
     private final CategoryService categoryService;
@@ -101,17 +104,7 @@ public class EventServiceImpl implements EventService {
     public ResponseEntity<GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>>> findAllEvents(PageRequest pageRequest) {
         var user = securityTools.getCurrentUser();
         var response = pageableRepositoryPaginationDto(eventRepository.findAllByUser(pageRequest, user));
-        var transformation = response.getValue().stream().map(event -> {
-            var res = objectMapper.convertValue(event, EventResponseDto.class);
-            res.setCategories(categoryService.getCategoryNameByEvent(event));
-            return res;
-        }).toList();
-
-        var dto = new PaginationUtils.PaginationDto<>(transformation,
-                response.getCurrentPage(),
-                response.getTotalPages(),
-                response.getTotalItems()
-        );
+        var dto = paginationFromEntityToEventResponseDto(response);
         return new GenericResponse<>(HttpStatus.OK, dto).GenerateResponse();
     }
 
@@ -150,5 +143,55 @@ public class EventServiceImpl implements EventService {
 
         eventEntity.setCapacity(eventUpdatedDt.getCapacity());
         return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
+    }
+
+    @Override
+    public GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>> searchAllEventsPublic(PageRequest pageRequest) {
+        var response = pageableRepositoryPaginationDto(eventRepository.findAllPublicEvents(pageRequest));
+        var dto = paginationFromEntityToEventResponseDto(response);
+        return new GenericResponse<>(HttpStatus.OK, dto);
+    }
+
+    //ToDo: remember count capacity of user already register
+
+    @Override
+    public GenericResponse<EventGuestDto> subscribeToPublicEvent(UUID eventUuid) {
+        var user = securityTools.getCurrentUser();
+        var event = eventRepository.findEventByUuidAndAccessType(eventUuid, EventAccessType.PUBLIC);
+        return null;
+    }
+
+    @Override
+    public GenericResponse<Void> unsubscribeFromPublicEvent(UUID eventUuid) {
+        return null;
+    }
+
+    @Override
+    public GenericResponse<Void> inviteToPrivateEvent(UUID eventUuid, UUID userId) {
+        return null;
+    }
+
+    @Override
+    public GenericResponse<EventGuestDto> subscribeToPrivateEvent(UUID eventUuid) {
+        return null;
+    }
+
+    @Override
+    public GenericResponse<Void> unsubscribeFromPrivateEvent(UUID eventUuid) {
+        return null;
+    }
+
+    private PaginationUtils.PaginationDto<EventResponseDto> paginationFromEntityToEventResponseDto(PaginationUtils.PaginationDto<EventEntity> response) {
+        var transformation = response.getValue().stream().map(event -> {
+            var res = objectMapper.convertValue(event, EventResponseDto.class);
+            res.setCategories(categoryService.getCategoryNameByEvent(event));
+            return res;
+        }).toList();
+
+        return new PaginationUtils.PaginationDto<>(transformation,
+                response.getCurrentPage(),
+                response.getTotalPages(),
+                response.getTotalItems()
+        );
     }
 }

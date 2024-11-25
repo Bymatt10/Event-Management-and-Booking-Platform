@@ -2,6 +2,7 @@ package com.example.backendeventmanagementbooking.domain.entity;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
+import com.example.backendeventmanagementbooking.enums.EventAccessType;
 import com.example.backendeventmanagementbooking.enums.StatusEvent;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -52,6 +53,10 @@ public class EventEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private EventAccessType accessType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private StatusEvent status;
 
     @ManyToOne(targetEntity = UserEntity.class)
@@ -70,6 +75,7 @@ public class EventEntity {
         this.typeEvent = eventDto.getTypeEvent();
         this.user = user;
         this.status =ACTIVE;
+        this.accessType = eventDto.getAccessType();
     }
     public EventEntity(EventUpdatedDto eventDto, UserEntity user) {
         this.title = eventDto.getTitle();

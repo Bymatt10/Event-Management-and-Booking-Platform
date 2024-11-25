@@ -3,6 +3,7 @@ package com.example.backendeventmanagementbooking.controller;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
+import com.example.backendeventmanagementbooking.service.EventGuestService;
 import com.example.backendeventmanagementbooking.service.EventService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class EventController {
 
     private final EventService eventService;
+    private final EventGuestService eventGuestService;
 
     @PostMapping("create")
     public ResponseEntity<GenericResponse<EventResponseDto>> saveEvent(@RequestBody @Valid EventDto eventDto) {
@@ -29,6 +31,11 @@ public class EventController {
     @GetMapping("list")
     public ResponseEntity<GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>>> getAllEvents(@RequestParam(defaultValue = "3") int size, @RequestParam(defaultValue = "0") int page) {
         return eventService.findAllEvents(PageRequest.of(page, size));
+    }
+
+    @GetMapping("list/available")
+    public ResponseEntity<GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>>> getAllAvailableEvents(@RequestParam(defaultValue = "3") int size, @RequestParam(defaultValue = "0") int page) {
+        return eventGuestService.searchAllEventsPublic(PageRequest.of(page, size)).GenerateResponse();
     }
 
     @GetMapping("find/{uuid}")

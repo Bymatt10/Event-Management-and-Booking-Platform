@@ -1,6 +1,7 @@
 package com.example.backendeventmanagementbooking.domain.dto.response;
 
 
+import com.example.backendeventmanagementbooking.enums.EventAccessType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,5 +19,7 @@ public class EventResponseDto {
     private String pathImage;
     private String capacity;
     private String price;
+    private String typeEvent;
+    private EventAccessType accessType;
     private List<String> categories;
 }                                         

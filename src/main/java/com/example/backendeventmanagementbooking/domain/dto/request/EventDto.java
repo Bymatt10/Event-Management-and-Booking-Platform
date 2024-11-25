@@ -1,6 +1,7 @@
 package com.example.backendeventmanagementbooking.domain.dto.request;
 
 import com.example.backendeventmanagementbooking.annotations.NotBlankWithFieldName;
+import com.example.backendeventmanagementbooking.enums.EventAccessType;
 import lombok.Data;
 
 import java.util.Date;
@@ -32,6 +33,9 @@ public class EventDto {
 
     @NotBlankWithFieldName
     private String typeEvent;
+
+    @NotBlankWithFieldName
+    private EventAccessType accessType;
 
     @NotBlankWithFieldName
     private List<String> categories;
