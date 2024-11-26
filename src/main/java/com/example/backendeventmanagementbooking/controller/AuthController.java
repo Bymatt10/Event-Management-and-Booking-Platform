@@ -8,10 +8,13 @@ import com.example.backendeventmanagementbooking.domain.dto.response.UserMeRespo
 import com.example.backendeventmanagementbooking.domain.dto.response.UserResponseDto;
 import com.example.backendeventmanagementbooking.service.SecurityService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("api/v1/auth/")
@@ -21,7 +24,7 @@ public class AuthController {
     private final SecurityService securityService;
 
     @PostMapping("register")
-    public ResponseEntity<GenericResponse<UserResponseDto>> registerUser(@RequestBody @Valid UserRequestDto userRequestDto) {
+    public ResponseEntity<GenericResponse<UserResponseDto>> registerUser(@RequestBody @Valid UserRequestDto userRequestDto) throws IOException, MessagingException {
         return securityService.registerUser(userRequestDto).GenerateResponse();
 
     }

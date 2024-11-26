@@ -1,5 +1,7 @@
 package com.example.backendeventmanagementbooking.service.Impl;
 
+import com.example.backendeventmanagementbooking.domain.dto.common.BuildEmailDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.EmailDetailsDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserChangePasswordDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserLoginDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.UserRequestDto;
@@ -8,12 +10,17 @@ import com.example.backendeventmanagementbooking.domain.dto.response.UserMeRespo
 import com.example.backendeventmanagementbooking.domain.dto.response.UserResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.UserEntity;
 import com.example.backendeventmanagementbooking.exception.CustomException;
+import com.example.backendeventmanagementbooking.repository.ProfileRepository;
 import com.example.backendeventmanagementbooking.repository.UserRepository;
 import com.example.backendeventmanagementbooking.security.CustomUserDetailService;
 import com.example.backendeventmanagementbooking.security.JwtUtil;
+import com.example.backendeventmanagementbooking.security.SecurityTools;
 import com.example.backendeventmanagementbooking.service.SecurityService;
+import com.example.backendeventmanagementbooking.utils.BuildEmail;
+import com.example.backendeventmanagementbooking.utils.EmailSender;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,16 +32,25 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.util.Date;
+
+import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.REGISTER_USER;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class SecurityServiceImpl implements SecurityService {
 
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailService customUserDetailService;
+    private final EmailSender emailSender;
+    private final BuildEmail buildEmail;
+    private final SecurityTools securityTools;
 
     @Override
     public GenericResponse<Object> changePassword(UserChangePasswordDto userChangePasswordDto) {
@@ -55,11 +71,12 @@ public class SecurityServiceImpl implements SecurityService {
     public GenericResponse<UserLoginResponseDto> login(UserLoginDto userLoginDto) {
         var username = userLoginDto.getUsername();
         var userEntity = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(username));
+                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
         if (!passwordEncoder.matches(userLoginDto.getPassword(), userEntity.getPassword())) {
             throw new BadCredentialsException(username);
         }
+
         var userDetails = customUserDetailService.generateUserDetails(userEntity.getUsername(),
                 userEntity.getPassword(),
                 userEntity.getRole());
@@ -69,25 +86,33 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     @Override
-    public GenericResponse<UserResponseDto> registerUser(UserRequestDto userRequestDto) {
+    public GenericResponse<UserResponseDto> registerUser(UserRequestDto userRequestDto) throws IOException, MessagingException {
         userRequestDto.setPassword(passwordEncoder.encode(userRequestDto.getPassword()));
-        var userEntity = objectMapper.convertValue(userRequestDto, UserEntity.class);
+        var userEntity = new UserEntity(userRequestDto);
+        userEntity.setProfile(profileRepository.save(userEntity.getProfile()));
         var savedUser = userRepository.save(userEntity);
+        var bodyEmail = buildEmail.getTemplateEmail(REGISTER_USER,
+                new BuildEmailDto("#USERNAME", savedUser.getUsername()),
+                new BuildEmailDto("#Date", new Date().toString())
+        );
+        emailSender.sendMail(new EmailDetailsDto(savedUser.getEmail(), bodyEmail, "Bienvenido"));
+
         var response = objectMapper.convertValue(savedUser, UserResponseDto.class);
         return new GenericResponse<>(HttpStatus.OK, response);
     }
 
     @Override
     public GenericResponse<UserMeResponseDto> me() {
-        var username = ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        var user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(username));
+        var user = securityTools.getCurrentUser();
 
         return new GenericResponse<>(HttpStatus.OK,
                 new UserMeResponseDto(user.getUserId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getRole())
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getRole(),
+                        user.getProfile().getFullName(),
+                        user.getProfile().getIdentification(),
+                        user.getProfile().getPhoneNumber())
         );
     }
 }
