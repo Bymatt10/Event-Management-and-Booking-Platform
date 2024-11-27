@@ -23,18 +23,27 @@ services:
       - JAVA_OPTS=-Duser.timezone=UTC -Xms512m -Xmx1024m
     network_mode: host
 
-  mysql-service:
+  mysql-service-1:
     image: mysql:latest
     environment:
       - MYSQL_DATABASE=practice
       - MYSQL_ROOT_PASSWORD=123456789*
     ports:
       - '3306:3306'
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     volumes:
-      - mysql_data:/var/lib/mysql
+        - mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+
+  mysql-service-2:
+    image: mysql:latest
+    environment:
+      - MYSQL_DATABASE=practice
+      - MYSQL_ROOT_PASSWORD=123456789*
+    ports:
+      - '3309:3309'
+    volumes:
+        - mysql_data:/var/lib/mysql
     networks:
       - app_network
 
