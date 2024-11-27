@@ -2,6 +2,7 @@ package com.example.backendeventmanagementbooking.controller;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
+import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.service.EventGuestService;
 import com.example.backendeventmanagementbooking.service.EventService;
@@ -51,5 +52,10 @@ public class EventController {
     @PutMapping("updated/{uuid}")
     public ResponseEntity<GenericResponse<EventResponseDto>> updateEvent(@PathVariable UUID uuid, @RequestBody EventUpdatedDto eventUpdatedDto) {
         return eventService.updateEvent(uuid, eventUpdatedDto).GenerateResponse();
+    }
+
+    @PostMapping("guest/subscribe/public/{eventUuid}")
+    public ResponseEntity<GenericResponse<EventGuestDto>> subscribeToPublicEvent(@PathVariable UUID eventUuid) {
+        return eventGuestService.subscribeToPublicEvent(eventUuid).GenerateResponse();
     }
 }

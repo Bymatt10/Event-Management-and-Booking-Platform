@@ -6,9 +6,10 @@ import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestD
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
 import com.example.backendeventmanagementbooking.domain.entity.EventEntity;
-import com.example.backendeventmanagementbooking.enums.EventAccessType;
+import com.example.backendeventmanagementbooking.domain.entity.EventGuestEntity;
 import com.example.backendeventmanagementbooking.enums.StatusEvent;
 import com.example.backendeventmanagementbooking.exception.CustomException;
+import com.example.backendeventmanagementbooking.repository.EventGuestRepository;
 import com.example.backendeventmanagementbooking.repository.EventRepository;
 import com.example.backendeventmanagementbooking.security.SecurityTools;
 import com.example.backendeventmanagementbooking.service.CategoryService;
@@ -17,16 +18,22 @@ import com.example.backendeventmanagementbooking.service.EventService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.luigivismara.shortuuid.ShortUuid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.UUID;
 
+import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET;
+import static com.example.backendeventmanagementbooking.enums.EventAccessType.PUBLIC;
+import static com.example.backendeventmanagementbooking.enums.InvitationStatusType.ACCEPTED;
 import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pageableRepositoryPaginationDto;
 
 @Service
@@ -36,6 +43,7 @@ import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pa
 public class EventServiceImpl implements EventService, EventGuestService {
 
     private final EventRepository eventRepository;
+    private final EventGuestRepository eventGuestRepository;
     private final CategoryService categoryService;
     private final ObjectMapper objectMapper;
     private final SecurityTools securityTools;
@@ -157,8 +165,26 @@ public class EventServiceImpl implements EventService, EventGuestService {
     @Override
     public GenericResponse<EventGuestDto> subscribeToPublicEvent(UUID eventUuid) {
         var user = securityTools.getCurrentUser();
-        var event = eventRepository.findEventByUuidAndAccessType(eventUuid, EventAccessType.PUBLIC);
-        return null;
+        var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PUBLIC, new Date());
+//        var event = eventRepository.findEventByUuidAndAccessType(eventUuid.toString(), PUBLIC);
+        if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
+
+        if (eventGuestRepository.existsByEventAndUser(event, user)) return new GenericResponse<>(HttpStatus.CONFLICT);
+
+        var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
+        if (event.getCapacity() < totalParticipant) {
+            return new GenericResponse<>("Capacity of event reached max", HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        var eventGuest = new EventGuestEntity(
+                event,
+                user,
+                PUBLIC,
+                ShortUuid.encode(UUID.randomUUID(), DEFAULT_ALPHABET, 5).toString(),
+                ACCEPTED);
+        var saved = eventGuestRepository.save(eventGuest);
+        var response = new EventGuestDto(saved, ACCEPTED);
+        return new GenericResponse<>(HttpStatus.OK, response);
     }
 
     @Override

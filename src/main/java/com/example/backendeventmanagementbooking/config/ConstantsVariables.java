@@ -16,4 +16,5 @@ public class ConstantsVariables {
     public static final String PATTERN_PHONE_NUMBER_NIC_MESSAGE = "Please provide a valid phone number";
     public static final String INVALID_STRING_NOT_BLANK = " is required and cannot be blank.";
     public static final String INVALID_EMAIL = "Please provide a valid email address.";
+    public static final char[] DEFAULT_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
 }

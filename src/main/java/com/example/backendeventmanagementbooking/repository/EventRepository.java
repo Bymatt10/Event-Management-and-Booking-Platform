@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,10 +18,10 @@ public interface EventRepository extends JpaRepository<EventEntity, UUID> {
     List<EventEntity> findAllEventsByUserUserId(UUID userId);
 
     @Query(value = """
-            SELECT * FROM event e WHERE e.access_type = 'PUBLIC' AND start_date >= NOW()
-           """, nativeQuery = true)
+             SELECT * FROM event e WHERE e.access_type = 'PUBLIC' AND start_date >= NOW()
+            """, nativeQuery = true)
     Page<EventEntity> findAllPublicEvents(Pageable pageable);
 
-    @Query(value = "SELECT * FROM event e WHERE e.uuid = ? AND e.access_type = ? AND start_date >= NOW()", nativeQuery = true)
-    EventEntity findEventByUuidAndAccessType(UUID eventId, EventAccessType eventAccessType);
+
+    EventEntity findEventByUuidAndAccessTypeAndStartDateAfter(UUID eventUuid, EventAccessType accessType, Date startDate);
 }

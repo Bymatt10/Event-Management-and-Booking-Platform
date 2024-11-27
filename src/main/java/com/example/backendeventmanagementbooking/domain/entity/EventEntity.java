@@ -4,6 +4,7 @@ import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
 import com.example.backendeventmanagementbooking.enums.EventAccessType;
 import com.example.backendeventmanagementbooking.enums.StatusEvent;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -59,6 +60,7 @@ public class EventEntity {
     @Column(nullable = false)
     private StatusEvent status;
 
+    @JsonIgnore
     @ManyToOne(targetEntity = UserEntity.class)
     @JoinColumn(nullable = false)
     private UserEntity user;
