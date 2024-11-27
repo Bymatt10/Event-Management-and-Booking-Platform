@@ -1,0 +1,28 @@
+# Ignore target directory (compiled code and packaged JAR/WAR files)
+target/
+
+# Ignore logs
+*.log
+
+# Ignore temporary files created by IDEs
+*.idea/
+*.iml
+.vscode/
+*.classpath
+*.project
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore version control folders
+.git/
+.svn/
+
+# Ignore dependency cache (Maven and Gradle)
+.mvn/
+.gradle/
+
+# Ignore build tools and container-related files
+docker-compose.yml
+Dockerfile
