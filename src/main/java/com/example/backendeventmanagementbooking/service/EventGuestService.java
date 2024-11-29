@@ -4,8 +4,10 @@ import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestD
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
+import jakarta.mail.MessagingException;
 import org.springframework.data.domain.PageRequest;
 
+import java.io.IOException;
 import java.util.UUID;
 
 public interface EventGuestService {
@@ -15,9 +17,9 @@ public interface EventGuestService {
 
     GenericResponse<Void>  unsubscribeFromPublicEvent(UUID eventUuid);
 
-    GenericResponse<Void>  inviteToPrivateEvent(UUID eventUuid, UUID userId);
+    GenericResponse<Void>  inviteToPrivateEvent(UUID eventUuid, UUID userId) throws MessagingException, IOException;
 
-    GenericResponse<EventGuestDto>  subscribeToPrivateEvent(UUID eventUuid);
+    GenericResponse<EventGuestDto>  subscribeToPrivateEvent(UUID eventUuid, String securityCode);
 
     GenericResponse<Void>  unsubscribeFromPrivateEvent(UUID eventUuid);
 }
