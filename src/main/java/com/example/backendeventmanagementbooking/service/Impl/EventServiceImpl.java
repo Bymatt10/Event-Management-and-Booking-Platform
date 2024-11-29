@@ -1,5 +1,7 @@
 package com.example.backendeventmanagementbooking.service.Impl;
 
+import com.example.backendeventmanagementbooking.domain.dto.common.BuildEmailDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.EmailDetailsDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
@@ -7,18 +9,23 @@ import com.example.backendeventmanagementbooking.domain.dto.response.EventRespon
 import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
 import com.example.backendeventmanagementbooking.domain.entity.EventEntity;
 import com.example.backendeventmanagementbooking.domain.entity.EventGuestEntity;
+import com.example.backendeventmanagementbooking.domain.entity.UserEntity;
 import com.example.backendeventmanagementbooking.enums.StatusEvent;
 import com.example.backendeventmanagementbooking.exception.CustomException;
 import com.example.backendeventmanagementbooking.repository.EventGuestRepository;
 import com.example.backendeventmanagementbooking.repository.EventRepository;
+import com.example.backendeventmanagementbooking.repository.UserRepository;
 import com.example.backendeventmanagementbooking.security.SecurityTools;
 import com.example.backendeventmanagementbooking.service.CategoryService;
 import com.example.backendeventmanagementbooking.service.EventGuestService;
 import com.example.backendeventmanagementbooking.service.EventService;
+import com.example.backendeventmanagementbooking.utils.BuildEmail;
+import com.example.backendeventmanagementbooking.utils.EmailSender;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luigivismara.shortuuid.ShortUuid;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -26,14 +33,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
 import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET;
+import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.INVITE_PRIVATE_EVENT;
+import static com.example.backendeventmanagementbooking.enums.EventAccessType.PRIVATE;
 import static com.example.backendeventmanagementbooking.enums.EventAccessType.PUBLIC;
-import static com.example.backendeventmanagementbooking.enums.InvitationStatusType.ACCEPTED;
+import static com.example.backendeventmanagementbooking.enums.InvitationStatusType.*;
 import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pageableRepositoryPaginationDto;
 
 @Service
@@ -45,8 +56,11 @@ public class EventServiceImpl implements EventService, EventGuestService {
     private final EventRepository eventRepository;
     private final EventGuestRepository eventGuestRepository;
     private final CategoryService categoryService;
+    private final BuildEmail buildEmail;
     private final ObjectMapper objectMapper;
     private final SecurityTools securityTools;
+    private final EmailSender emailSender;
+    private final UserRepository userRepository;
 
     @Override
     public GenericResponse<EventResponseDto> saveEvent(EventDto eventDto) {
@@ -166,7 +180,6 @@ public class EventServiceImpl implements EventService, EventGuestService {
     public GenericResponse<EventGuestDto> subscribeToPublicEvent(UUID eventUuid) {
         var user = securityTools.getCurrentUser();
         var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PUBLIC, new Date());
-//        var event = eventRepository.findEventByUuidAndAccessType(eventUuid.toString(), PUBLIC);
         if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
 
         if (eventGuestRepository.existsByEventAndUser(event, user)) return new GenericResponse<>(HttpStatus.CONFLICT);
@@ -189,17 +202,62 @@ public class EventServiceImpl implements EventService, EventGuestService {
 
     @Override
     public GenericResponse<Void> unsubscribeFromPublicEvent(UUID eventUuid) {
-        return null;
+        var user = securityTools.getCurrentUser();
+        var event = eventRepository.findById(eventUuid);
+        if (event.isEmpty()) return new GenericResponse<>("Event does not exist!", HttpStatus.NOT_FOUND);
+        var eventGuest = eventGuestRepository.findByEventAndUserAndInvitationStatus(event.get(), user, ACCEPTED);
+        if (eventGuest == null) return new GenericResponse<>("User is not subscribe in the current event!", HttpStatus.NOT_FOUND);
+
+        eventGuest.setInvitationStatus(DECLINED);
+        eventGuestRepository.save(eventGuest);
+        return new GenericResponse<>(HttpStatus.OK);
     }
 
     @Override
-    public GenericResponse<Void> inviteToPrivateEvent(UUID eventUuid, UUID userId) {
-        return null;
+    public GenericResponse<Void> inviteToPrivateEvent(UUID eventUuid, UUID userId) throws MessagingException, IOException {
+        var user = userRepository.findById(userId);
+        if (user.isEmpty()) return new GenericResponse<>("User does not exist!", HttpStatus.NOT_FOUND);
+        var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PRIVATE, new Date());
+        if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
+
+        if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user.get(), PENDING)) return new GenericResponse<>(HttpStatus.CONFLICT);
+        var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
+        if (event.getCapacity() < totalParticipant) {
+            return new GenericResponse<>("Capacity of event reached max", HttpStatus.NOT_ACCEPTABLE);
+        }
+        var eventGuest = new EventGuestEntity(
+                event,
+                user.get(),
+                PRIVATE,
+                ShortUuid.encode(UUID.randomUUID(), DEFAULT_ALPHABET, 5).toString(),
+                PENDING);
+        eventGuestRepository.save(eventGuest);
+        sendEmailPrivateEvent(event, user.get(), eventGuest.getVerificationCode());
+        //SEND EMAIL
+        return new GenericResponse<>(HttpStatus.OK);
     }
 
     @Override
-    public GenericResponse<EventGuestDto> subscribeToPrivateEvent(UUID eventUuid) {
-        return null;
+    public GenericResponse<EventGuestDto> subscribeToPrivateEvent(UUID eventUuid, String securityCode) {
+        var user = securityTools.getCurrentUser();
+        var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PRIVATE, new Date());
+        if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
+
+        if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user, ACCEPTED)) return new GenericResponse<>(HttpStatus.CONFLICT);
+        var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
+        if (event.getCapacity() < totalParticipant) {
+            return new GenericResponse<>("Capacity of event reached max", HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        var eventGuest = eventGuestRepository.findByEventAndUserAndInvitationStatus(event, user, PENDING);
+        if (eventGuest == null) return new GenericResponse<>("Event does not exist!", HttpStatus.NOT_FOUND);
+        if (!eventGuest.getVerificationCode().equals(securityCode)) {
+            return new GenericResponse<>("Verification code mismatch", HttpStatus.NOT_ACCEPTABLE);
+        }
+        eventGuest.setInvitationStatus(ACCEPTED);
+        var saved = eventGuestRepository.save(eventGuest);
+        var response = new EventGuestDto(saved, ACCEPTED);
+        return new GenericResponse<>(HttpStatus.OK, response);
     }
 
     @Override
@@ -219,5 +277,17 @@ public class EventServiceImpl implements EventService, EventGuestService {
                 response.getTotalPages(),
                 response.getTotalItems()
         );
+    }
+
+    @Async("email")
+    protected void sendEmailPrivateEvent(EventEntity event, UserEntity user, String securityCode) throws IOException, MessagingException {
+        var template = buildEmail.getTemplateEmail(INVITE_PRIVATE_EVENT,
+                new BuildEmailDto("#USERNAME", user.getProfile().getFullName()),
+                new BuildEmailDto("#EVENT_NAME", event.getTitle()),
+                new BuildEmailDto("#DATE", event.getStartDate().toString()),
+                new BuildEmailDto("#LOCATION", event.getLocation()),
+                new BuildEmailDto("#SECURITY_CODE", securityCode));
+
+        emailSender.sendMail(new EmailDetailsDto(user.getEmail(), template, "Invitation to " + event.getTitle()));
     }
 }

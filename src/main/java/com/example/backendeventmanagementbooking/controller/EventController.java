@@ -8,12 +8,14 @@ import com.example.backendeventmanagementbooking.service.EventGuestService;
 import com.example.backendeventmanagementbooking.service.EventService;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.UUID;
 
 @RestController
@@ -57,5 +59,15 @@ public class EventController {
     @PostMapping("guest/subscribe/public/{eventUuid}")
     public ResponseEntity<GenericResponse<EventGuestDto>> subscribeToPublicEvent(@PathVariable UUID eventUuid) {
         return eventGuestService.subscribeToPublicEvent(eventUuid).GenerateResponse();
+    }
+
+    @PostMapping("guest/invite/private/{eventUuid}/{userId}")
+    public ResponseEntity<GenericResponse<Void>> invitePrivateEvent(@PathVariable UUID eventUuid, @PathVariable UUID userId) throws MessagingException, IOException {
+        return eventGuestService.inviteToPrivateEvent(eventUuid, userId).GenerateResponse();
+    }
+
+    @PostMapping("guest/subscribe/private/{eventUuid}")
+    public ResponseEntity<GenericResponse<EventGuestDto>> subscribeToPrivateEvent(@PathVariable UUID eventUuid, @RequestParam String securityCode) {
+        return eventGuestService.subscribeToPrivateEvent(eventUuid, securityCode).GenerateResponse();
     }
 }
