@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface EventRepository extends JpaRepository<EventEntity, UUID> {
     Page<EventEntity> findAllByUser(Pageable pageable, UserEntity user);
 
-    List<EventEntity> findAllEventsByUserUserId(UUID userId);
+    List<EventEntity> findAllEventsByUserUserId(UUID userId, EventAccessType aPublic);
 
     @Query(value = """
              SELECT * FROM event e WHERE e.access_type = 'PUBLIC' AND start_date >= NOW()

@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET;
+import static com.example.backendeventmanagementbooking.enums.EventAccessType.PRIVATE;
 import static com.example.backendeventmanagementbooking.enums.EventAccessType.PUBLIC;
 import static com.example.backendeventmanagementbooking.enums.InvitationStatusType.ACCEPTED;
 import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pageableRepositoryPaginationDto;
@@ -166,7 +167,6 @@ public class EventServiceImpl implements EventService, EventGuestService {
     public GenericResponse<EventGuestDto> subscribeToPublicEvent(UUID eventUuid) {
         var user = securityTools.getCurrentUser();
         var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PUBLIC, new Date());
-//        var event = eventRepository.findEventByUuidAndAccessType(eventUuid.toString(), PUBLIC);
         if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
 
         if (eventGuestRepository.existsByEventAndUser(event, user)) return new GenericResponse<>(HttpStatus.CONFLICT);
@@ -189,7 +189,14 @@ public class EventServiceImpl implements EventService, EventGuestService {
 
     @Override
     public GenericResponse<Void> unsubscribeFromPublicEvent(UUID eventUuid) {
-        return null;
+        var user = securityTools.getCurrentUser();
+        var event = eventRepository.findAllEventsByUserUserId(eventUuid, PUBLIC);
+        var eventGuest = eventGuestRepository.findByEventAndUser((EventEntity) event, user);
+        if (eventGuest.isEmpty()) {
+            return new GenericResponse<>("User is not registered for this event", HttpStatus.CONFLICT);
+        }
+        eventGuestRepository.delete(eventGuest.get());
+        return new GenericResponse<>(HttpStatus.OK);
     }
 
     @Override
@@ -199,7 +206,25 @@ public class EventServiceImpl implements EventService, EventGuestService {
 
     @Override
     public GenericResponse<EventGuestDto> subscribeToPrivateEvent(UUID eventUuid) {
-        return null;
+
+        var user = securityTools.getCurrentUser();
+        var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PRIVATE, new Date());
+        if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
+
+        if (eventGuestRepository.existsByEventAndUser(event, user)) return new GenericResponse<>(HttpStatus.CONFLICT);
+        var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
+        if (event.getCapacity() < totalParticipant) {
+            return new GenericResponse<>("Capacity of event reached max", HttpStatus.NOT_ACCEPTABLE);
+        }
+        var eventGuest = new EventGuestEntity(
+                event,
+                user,
+                PRIVATE,
+                ShortUuid.encode(UUID.randomUUID(), DEFAULT_ALPHABET, 5).toString(),
+                ACCEPTED);
+        var saved = eventGuestRepository.save(eventGuest);
+        var response = new EventGuestDto(saved, ACCEPTED);
+        return new GenericResponse<>(HttpStatus.OK, response);
     }
 
     @Override
