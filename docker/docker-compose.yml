@@ -30,11 +30,8 @@ services:
       - MYSQL_ROOT_PASSWORD=123456789*
     ports:
       - '3306:3306'
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     volumes:
-      - mysql_data:/var/lib/mysql
+        - mysql_data:/var/lib/mysql
     networks:
       - app_network
 
