@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET;
+import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET_UPPER;
 import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.INVITE_PRIVATE_EVENT;
 import static com.example.backendeventmanagementbooking.enums.EventAccessType.PRIVATE;
 import static com.example.backendeventmanagementbooking.enums.EventAccessType.PUBLIC;
@@ -60,6 +61,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
     private final ObjectMapper objectMapper;
     private final SecurityTools securityTools;
     private final EmailSender emailSender;
+    private final EventCacheService eventCacheService;
     private final UserRepository userRepository;
 
     @Override
@@ -184,10 +186,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
 
         if (eventGuestRepository.existsByEventAndUser(event, user)) return new GenericResponse<>(HttpStatus.CONFLICT);
 
-        var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
-        if (event.getCapacity() < totalParticipant) {
-            return new GenericResponse<>("Capacity of event reached max", HttpStatus.NOT_ACCEPTABLE);
-        }
+        countParticipantInEvent(event);
 
         var eventGuest = new EventGuestEntity(
                 event,
@@ -213,6 +212,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
         return new GenericResponse<>(HttpStatus.OK);
     }
 
+    // ToDo: Como sabemos cual es el evento atravez del correo
     @Override
     public GenericResponse<Void> inviteToPrivateEvent(UUID eventUuid, UUID userId) throws MessagingException, IOException {
         var user = userRepository.findById(userId);
@@ -221,42 +221,40 @@ public class EventServiceImpl implements EventService, EventGuestService {
         if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
 
         if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user.get(), PENDING)) return new GenericResponse<>(HttpStatus.CONFLICT);
-        var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
-        if (event.getCapacity() < totalParticipant) {
-            return new GenericResponse<>("Capacity of event reached max", HttpStatus.NOT_ACCEPTABLE);
-        }
+        countParticipantInEvent(event);
         var eventGuest = new EventGuestEntity(
                 event,
                 user.get(),
                 PRIVATE,
-                ShortUuid.encode(UUID.randomUUID(), DEFAULT_ALPHABET, 5).toString(),
+                ShortUuid.encode(UUID.randomUUID(), DEFAULT_ALPHABET_UPPER, 7).toString(),
                 PENDING);
         eventGuestRepository.save(eventGuest);
+        eventCacheService.saveInvitationToRedis(eventGuest);
         sendEmailPrivateEvent(event, user.get(), eventGuest.getVerificationCode());
         //SEND EMAIL
         return new GenericResponse<>(HttpStatus.OK);
     }
 
     @Override
-    public GenericResponse<EventGuestDto> subscribeToPrivateEvent(UUID eventUuid, String securityCode) {
+    public GenericResponse<EventGuestDto> subscribeToPrivateEvent(String securityCode) {
         var user = securityTools.getCurrentUser();
-        var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PRIVATE, new Date());
+        var eventSaveRedis = eventCacheService.getInvitationFromRedis(securityCode);
+        var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventSaveRedis.eventUuid(), PRIVATE, new Date());
         if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
 
         if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user, ACCEPTED)) return new GenericResponse<>(HttpStatus.CONFLICT);
-        var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
-        if (event.getCapacity() < totalParticipant) {
-            return new GenericResponse<>("Capacity of event reached max", HttpStatus.NOT_ACCEPTABLE);
-        }
-
+        countParticipantInEvent(event);
         var eventGuest = eventGuestRepository.findByEventAndUserAndInvitationStatus(event, user, PENDING);
         if (eventGuest == null) return new GenericResponse<>("Event does not exist!", HttpStatus.NOT_FOUND);
+
+
         if (!eventGuest.getVerificationCode().equals(securityCode)) {
             return new GenericResponse<>("Verification code mismatch", HttpStatus.NOT_ACCEPTABLE);
         }
         eventGuest.setInvitationStatus(ACCEPTED);
         var saved = eventGuestRepository.save(eventGuest);
         var response = new EventGuestDto(saved, ACCEPTED);
+        eventCacheService.evictInvitationFromRedis(securityCode);
         return new GenericResponse<>(HttpStatus.OK, response);
     }
 
@@ -290,4 +288,12 @@ public class EventServiceImpl implements EventService, EventGuestService {
 
         emailSender.sendMail(new EmailDetailsDto(user.getEmail(), template, "Invitation to " + event.getTitle()));
     }
+
+    private void countParticipantInEvent(EventEntity event){
+        var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
+        if (event.getCapacity() < totalParticipant) {
+            throw new CustomException( HttpStatus.NOT_ACCEPTABLE, "Capacity of event reached max");
+        }
+    }
+
 }

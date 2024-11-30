@@ -17,4 +17,5 @@ public class ConstantsVariables {
     public static final String INVALID_STRING_NOT_BLANK = " is required and cannot be blank.";
     public static final String INVALID_EMAIL = "Please provide a valid email address.";
     public static final char[] DEFAULT_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
+    public static final char[] DEFAULT_ALPHABET_UPPER = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ".toCharArray();
 }
