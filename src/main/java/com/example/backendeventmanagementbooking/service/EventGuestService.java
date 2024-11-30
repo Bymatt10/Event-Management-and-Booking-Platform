@@ -19,7 +19,7 @@ public interface EventGuestService {
 
     GenericResponse<Void>  inviteToPrivateEvent(UUID eventUuid, UUID userId) throws MessagingException, IOException;
 
-    GenericResponse<EventGuestDto>  subscribeToPrivateEvent(UUID eventUuid, String securityCode);
+    GenericResponse<EventGuestDto>  subscribeToPrivateEvent(String securityCode);
 
     GenericResponse<Void>  unsubscribeFromPrivateEvent(UUID eventUuid);
 }
