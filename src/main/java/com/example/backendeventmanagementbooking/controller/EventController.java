@@ -66,8 +66,8 @@ public class EventController {
         return eventGuestService.inviteToPrivateEvent(eventUuid, userId).GenerateResponse();
     }
 
-    @PostMapping("guest/subscribe/private/{eventUuid}")
-    public ResponseEntity<GenericResponse<EventGuestDto>> subscribeToPrivateEvent(@PathVariable UUID eventUuid, @RequestParam String securityCode) {
-        return eventGuestService.subscribeToPrivateEvent(eventUuid, securityCode).GenerateResponse();
+    @PostMapping("guest/subscribe/private")
+    public ResponseEntity<GenericResponse<EventGuestDto>> subscribeToPrivateEvent(@RequestParam String securityCode) {
+        return eventGuestService.subscribeToPrivateEvent(securityCode).GenerateResponse();
     }
 }
