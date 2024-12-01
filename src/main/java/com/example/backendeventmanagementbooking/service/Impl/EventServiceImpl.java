@@ -240,16 +240,16 @@ public class EventServiceImpl implements EventService, EventGuestService {
         var user = securityTools.getCurrentUser();
         var eventSaveRedis = eventCacheService.getInvitationFromRedis(securityCode);
         var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventSaveRedis.eventUuid(), PRIVATE, new Date());
-        if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
+        if (ObjectUtils.isEmpty(event)) throw new CustomException(HttpStatus.NOT_FOUND);
 
-        if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user, ACCEPTED)) return new GenericResponse<>(HttpStatus.CONFLICT);
+        if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user, ACCEPTED)) throw new CustomException(HttpStatus.CONFLICT);
         countParticipantInEvent(event);
         var eventGuest = eventGuestRepository.findByEventAndUserAndInvitationStatus(event, user, PENDING);
-        if (eventGuest == null) return new GenericResponse<>("Event does not exist!", HttpStatus.NOT_FOUND);
+        if (eventGuest == null) throw new CustomException(HttpStatus.NOT_FOUND, "Event does not exist!");
 
 
         if (!eventGuest.getVerificationCode().equals(securityCode)) {
-            return new GenericResponse<>("Verification code mismatch", HttpStatus.NOT_ACCEPTABLE);
+            throw new CustomException(HttpStatus.NOT_ACCEPTABLE, "Verification code mismatch");
         }
         eventGuest.setInvitationStatus(ACCEPTED);
         var saved = eventGuestRepository.save(eventGuest);

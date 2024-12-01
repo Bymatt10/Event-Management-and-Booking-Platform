@@ -11,6 +11,7 @@ import com.example.backendeventmanagementbooking.utils.PaginationUtils;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("api/v1/event/")
 @RequiredArgsConstructor

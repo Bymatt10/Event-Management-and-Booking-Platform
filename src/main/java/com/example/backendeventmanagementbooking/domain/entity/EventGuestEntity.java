@@ -2,14 +2,16 @@ package com.example.backendeventmanagementbooking.domain.entity;
 
 import com.example.backendeventmanagementbooking.enums.EventAccessType;
 import com.example.backendeventmanagementbooking.enums.InvitationStatusType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+
+import java.time.LocalDateTime;
 
 @Entity(name = "event_guest")
 @DynamicInsert
@@ -27,7 +29,6 @@ public class EventGuestEntity {
     @JoinColumn(nullable = false)
     private EventEntity event;
 
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(nullable = false)
     private UserEntity user;
@@ -42,11 +43,15 @@ public class EventGuestEntity {
     @Column(nullable = false)
     private InvitationStatusType invitationStatus = InvitationStatusType.PENDING;
 
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
     public EventGuestEntity(EventEntity event, UserEntity user, EventAccessType eventAccessType, String shortUuid, InvitationStatusType invitationStatusType) {
         this.event = event;
         this.user = user;
         this.accessType = eventAccessType;
         this.verificationCode = shortUuid;
         this.invitationStatus = invitationStatusType;
+        this.createdAt = LocalDateTime.now();
     }
 }

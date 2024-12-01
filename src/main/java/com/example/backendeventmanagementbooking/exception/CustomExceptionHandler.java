@@ -1,6 +1,7 @@
 package com.example.backendeventmanagementbooking.exception;
 
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+@Slf4j
 @ControllerAdvice
 public class CustomExceptionHandler {
 
@@ -28,6 +30,7 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<GenericResponse<Object>> customException(CustomException ex) {
+        log.error("Error: ",ex);
         return ex.getGenericResponse().GenerateResponse();
     }
 }

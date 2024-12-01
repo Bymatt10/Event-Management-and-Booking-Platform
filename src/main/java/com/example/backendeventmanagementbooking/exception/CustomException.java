@@ -19,6 +19,10 @@ public class CustomException extends RuntimeException {
     public CustomException(HttpStatus status, String message) {
         this.genericResponse = new GenericResponse<>(message, status);
     }
+
+    public CustomException(HttpStatus status) {
+        this.genericResponse = new GenericResponse<>(status);
+    }
     
     public ResponseEntity<GenericResponse<Object>> toResponseEntity() {
         return this.genericResponse.GenerateResponse();
