@@ -72,4 +72,9 @@ public class EventController {
     public ResponseEntity<GenericResponse<EventGuestDto>> subscribeToPrivateEvent(@RequestParam String securityCode) {
         return eventGuestService.subscribeToPrivateEvent(securityCode).GenerateResponse();
     }
+
+    @PutMapping("guest/unsubscribe/private")
+    public ResponseEntity<GenericResponse<Void>> unsubscribeFromPrivateEvent(@RequestParam UUID eventUuid) {
+        return eventGuestService.unsubscribeFromPrivateEvent(eventUuid).GenerateResponse();
+    }
 }
