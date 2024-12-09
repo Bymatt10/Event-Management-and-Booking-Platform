@@ -205,7 +205,8 @@ public class EventServiceImpl implements EventService, EventGuestService {
         var event = eventRepository.findById(eventUuid);
         if (event.isEmpty()) return new GenericResponse<>("Event does not exist!", HttpStatus.NOT_FOUND);
         var eventGuest = eventGuestRepository.findByEventAndUserAndInvitationStatus(event.get(), user, ACCEPTED);
-        if (eventGuest == null) return new GenericResponse<>("User is not subscribe in the current event!", HttpStatus.NOT_FOUND);
+        if (eventGuest == null)
+            return new GenericResponse<>("User is not subscribe in the current event!", HttpStatus.NOT_FOUND);
 
         eventGuest.setInvitationStatus(DECLINED);
         eventGuestRepository.save(eventGuest);
@@ -220,7 +221,8 @@ public class EventServiceImpl implements EventService, EventGuestService {
         var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PRIVATE, new Date());
         if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
 
-        if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user.get(), PENDING)) return new GenericResponse<>(HttpStatus.CONFLICT);
+        if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user.get(), PENDING))
+            return new GenericResponse<>(HttpStatus.CONFLICT);
         countParticipantInEvent(event);
         var eventGuest = new EventGuestEntity(
                 event,
@@ -242,7 +244,8 @@ public class EventServiceImpl implements EventService, EventGuestService {
         var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventSaveRedis.eventUuid(), PRIVATE, new Date());
         if (ObjectUtils.isEmpty(event)) throw new CustomException(HttpStatus.NOT_FOUND);
 
-        if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user, ACCEPTED)) throw new CustomException(HttpStatus.CONFLICT);
+        if (eventGuestRepository.existsByEventAndUserAndInvitationStatus(event, user, ACCEPTED))
+            throw new CustomException(HttpStatus.CONFLICT);
         countParticipantInEvent(event);
         var eventGuest = eventGuestRepository.findByEventAndUserAndInvitationStatus(event, user, PENDING);
         if (eventGuest == null) throw new CustomException(HttpStatus.NOT_FOUND, "Event does not exist!");
@@ -260,7 +263,15 @@ public class EventServiceImpl implements EventService, EventGuestService {
 
     @Override
     public GenericResponse<Void> unsubscribeFromPrivateEvent(UUID eventUuid) {
-        return null;
+        var user = securityTools.getCurrentUser();
+        var getEvent = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PRIVATE, new Date());
+        var eventGuest = eventGuestRepository.findByEventAndUserAndInvitationStatus(getEvent, user, PENDING);
+        if (eventGuest == null) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "We don't have any event!.");
+        }
+        eventGuest.setInvitationStatus(DECLINED);
+        eventGuestRepository.save(eventGuest);
+        return new GenericResponse<>(HttpStatus.OK);
     }
 
     private PaginationUtils.PaginationDto<EventResponseDto> paginationFromEntityToEventResponseDto(PaginationUtils.PaginationDto<EventEntity> response) {
@@ -289,10 +300,10 @@ public class EventServiceImpl implements EventService, EventGuestService {
         emailSender.sendMail(new EmailDetailsDto(user.getEmail(), template, "Invitation to " + event.getTitle()));
     }
 
-    private void countParticipantInEvent(EventEntity event){
+    private void countParticipantInEvent(EventEntity event) {
         var totalParticipant = eventGuestRepository.countByEventAndInvitationStatus(event, ACCEPTED);
         if (event.getCapacity() < totalParticipant) {
-            throw new CustomException( HttpStatus.NOT_ACCEPTABLE, "Capacity of event reached max");
+            throw new CustomException(HttpStatus.NOT_ACCEPTABLE, "Capacity of event reached max");
         }
     }
 
