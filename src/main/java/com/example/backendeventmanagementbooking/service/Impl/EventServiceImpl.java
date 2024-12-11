@@ -38,10 +38,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET;
 import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET_UPPER;
+import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.CONFIRMATION_EVENT;
 import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.INVITE_PRIVATE_EVENT;
 import static com.example.backendeventmanagementbooking.enums.EventAccessType.PRIVATE;
 import static com.example.backendeventmanagementbooking.enums.EventAccessType.PUBLIC;
@@ -132,6 +134,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
         return new GenericResponse<>(HttpStatus.OK, dto).GenerateResponse();
     }
 
+
     @Override
     public GenericResponse<EventDto> changeDate(UUID uuid, EventUpdatedDto eventUpdatedDto) {
         EventEntity eventEntity = eventRepository.findById(uuid)
@@ -170,16 +173,29 @@ public class EventServiceImpl implements EventService, EventGuestService {
     }
 
     @Override
+    public ResponseEntity<GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>>> listAllMyEventSubscriptions(PageRequest pageRequest) {
+        var user = securityTools.getCurrentUser();
+        var response = pageableRepositoryPaginationDto(eventGuestRepository.findAllByUserAndInvitationStatus(user, ACCEPTED, pageRequest));
+        var list = response.getValue().stream().map(eventGuestEntity -> {
+            var converted = objectMapper.convertValue(eventGuestEntity.getEvent(), EventResponseDto.class);
+            var categories = categoryService.getCategoryNameByEvent(eventGuestEntity.getEvent());
+            converted.setCategories(categories);
+            return converted;
+        }).toList();
+
+        var result = new PaginationUtils.PaginationDto<EventResponseDto>(list, response.getCurrentPage(), response.getTotalPages(), response.getTotalItems());
+        return new GenericResponse<>(HttpStatus.OK, result).GenerateResponse();
+    }
+
+    @Override
     public GenericResponse<PaginationUtils.PaginationDto<EventResponseDto>> searchAllEventsPublic(PageRequest pageRequest) {
         var response = pageableRepositoryPaginationDto(eventRepository.findAllPublicEvents(pageRequest));
         var dto = paginationFromEntityToEventResponseDto(response);
         return new GenericResponse<>(HttpStatus.OK, dto);
     }
 
-    //ToDo: remember count capacity of user already register
-
     @Override
-    public GenericResponse<EventGuestDto> subscribeToPublicEvent(UUID eventUuid) {
+    public GenericResponse<EventGuestDto> subscribeToPublicEvent(UUID eventUuid) throws MessagingException, IOException {
         var user = securityTools.getCurrentUser();
         var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventUuid, PUBLIC, new Date());
         if (ObjectUtils.isEmpty(event)) return new GenericResponse<>(HttpStatus.NOT_FOUND);
@@ -196,6 +212,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
                 ACCEPTED);
         var saved = eventGuestRepository.save(eventGuest);
         var response = new EventGuestDto(saved, ACCEPTED);
+        sendEmailConfirmation(event, user);
         return new GenericResponse<>(HttpStatus.OK, response);
     }
 
@@ -213,7 +230,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
         return new GenericResponse<>(HttpStatus.OK);
     }
 
-    // ToDo: Como sabemos cual es el evento atravez del correo
+
     @Override
     public GenericResponse<Void> inviteToPrivateEvent(UUID eventUuid, UUID userId) throws MessagingException, IOException {
         var user = userRepository.findById(userId);
@@ -233,12 +250,11 @@ public class EventServiceImpl implements EventService, EventGuestService {
         eventGuestRepository.save(eventGuest);
         eventCacheService.saveInvitationToRedis(eventGuest);
         sendEmailPrivateEvent(event, user.get(), eventGuest.getVerificationCode());
-        //SEND EMAIL
         return new GenericResponse<>(HttpStatus.OK);
     }
 
     @Override
-    public GenericResponse<EventGuestDto> subscribeToPrivateEvent(String securityCode) {
+    public GenericResponse<EventGuestDto> subscribeToPrivateEvent(String securityCode) throws MessagingException, IOException {
         var user = securityTools.getCurrentUser();
         var eventSaveRedis = eventCacheService.getInvitationFromRedis(securityCode);
         var event = eventRepository.findEventByUuidAndAccessTypeAndStartDateAfter(eventSaveRedis.eventUuid(), PRIVATE, new Date());
@@ -258,6 +274,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
         var saved = eventGuestRepository.save(eventGuest);
         var response = new EventGuestDto(saved, ACCEPTED);
         eventCacheService.evictInvitationFromRedis(securityCode);
+        sendEmailConfirmation(event, user);
         return new GenericResponse<>(HttpStatus.OK, response);
     }
 
@@ -297,6 +314,16 @@ public class EventServiceImpl implements EventService, EventGuestService {
                 new BuildEmailDto("#LOCATION", event.getLocation()),
                 new BuildEmailDto("#SECURITY_CODE", securityCode));
 
+        emailSender.sendMail(new EmailDetailsDto(user.getEmail(), template, "Invitation to " + event.getTitle()));
+    }
+
+    @Async("email")
+    protected void sendEmailConfirmation(EventEntity event, UserEntity user) throws IOException, MessagingException {
+        var template = buildEmail.getTemplateEmail(CONFIRMATION_EVENT,
+                new BuildEmailDto("#USERNAME", user.getProfile().getFullName()),
+                new BuildEmailDto("#EVENT_NAME", event.getTitle()),
+                new BuildEmailDto("#DATE", event.getStartDate().toString()),
+                new BuildEmailDto("#LOCATION", event.getLocation()));
         emailSender.sendMail(new EmailDetailsDto(user.getEmail(), template, "Invitation to " + event.getTitle()));
     }
 
