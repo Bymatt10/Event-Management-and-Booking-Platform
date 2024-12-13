@@ -2,6 +2,7 @@ package com.example.backendeventmanagementbooking.controller;
 
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.UpdateDateDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.service.EventGuestService;
@@ -84,8 +85,8 @@ public class EventController {
     }
 
     @PutMapping("guest/changeDate")
-    public ResponseEntity<GenericResponse<EventDto>> changeDate(@RequestParam UUID eventUuid, EventUpdatedDto eventUpdatedDto) {
-        return eventService.changeDate(eventUuid, eventUpdatedDto).GenerateResponse();
+    public ResponseEntity<GenericResponse<EventDto>> changeDate(@RequestParam UUID eventUuid, UpdateDateDto updateDate) {
+        return eventService.changeDate(eventUuid, updateDate).GenerateResponse();
     }
 
     @PutMapping("guest/changeLocation")

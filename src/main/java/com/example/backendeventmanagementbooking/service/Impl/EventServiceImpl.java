@@ -4,6 +4,8 @@ import com.example.backendeventmanagementbooking.domain.dto.common.BuildEmailDto
 import com.example.backendeventmanagementbooking.domain.dto.request.EmailDetailsDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
 import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.UpdateDate;
+import com.example.backendeventmanagementbooking.domain.dto.request.UpdateDateDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
@@ -136,12 +138,12 @@ public class EventServiceImpl implements EventService, EventGuestService {
 
 
     @Override
-    public GenericResponse<EventDto> changeDate(UUID uuid, EventUpdatedDto eventUpdatedDto) {
+    public GenericResponse<EventDto> changeDate(UUID uuid, UpdateDateDto updateDate) {
         EventEntity eventEntity = eventRepository.findById(uuid)
                 .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
 
-        eventEntity.setStartDate(eventUpdatedDto.getStartDate());
-        eventEntity.setEndDate(eventUpdatedDto.getEndDate());
+        eventEntity.setStartDate(updateDate.getStartDate());
+        eventEntity.setEndDate(updateDate.getEndDate());
         return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 
