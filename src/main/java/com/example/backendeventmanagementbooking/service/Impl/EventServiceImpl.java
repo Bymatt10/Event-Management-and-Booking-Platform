@@ -1,11 +1,7 @@
 package com.example.backendeventmanagementbooking.service.Impl;
 
 import com.example.backendeventmanagementbooking.domain.dto.common.BuildEmailDto;
-import com.example.backendeventmanagementbooking.domain.dto.request.EmailDetailsDto;
-import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
-import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
-import com.example.backendeventmanagementbooking.domain.dto.request.UpdateDate;
-import com.example.backendeventmanagementbooking.domain.dto.request.UpdateDateDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.*;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
@@ -148,11 +144,11 @@ public class EventServiceImpl implements EventService, EventGuestService {
     }
 
     @Override
-    public GenericResponse<EventDto> changeLocation(UUID uuid, EventUpdatedDto eventUpdatedDto) {
+    public GenericResponse<EventDto> changeLocation(UUID uuid, UpdatedLocationDto updatedLocationDto) {
         EventEntity eventEntity = eventRepository.findById(uuid)
                 .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
 
-        eventEntity.setLocation(eventUpdatedDto.getLocation());
+        eventEntity.setLocation(updatedLocationDto.getLocation());
         return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 
@@ -166,11 +162,11 @@ public class EventServiceImpl implements EventService, EventGuestService {
     }
 
     @Override
-    public GenericResponse<EventDto> changeCapacity(UUID uuid, EventUpdatedDto eventUpdatedDt) {
+    public GenericResponse<EventDto> changeCapacity(UUID uuid, UpdateCapacityDto updateCapacityDto) {
         EventEntity eventEntity = eventRepository.findById(uuid)
                 .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Event not found"));
 
-        eventEntity.setCapacity(eventUpdatedDt.getCapacity());
+        eventEntity.setCapacity(updateCapacityDto.getCapacity());
         return new GenericResponse<>(HttpStatus.OK, objectMapper.convertValue(eventEntity, EventDto.class));
     }
 

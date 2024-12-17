@@ -1,8 +1,6 @@
 package com.example.backendeventmanagementbooking.controller;
 
-import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
-import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
-import com.example.backendeventmanagementbooking.domain.dto.request.UpdateDateDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.*;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.service.EventGuestService;
@@ -90,8 +88,8 @@ public class EventController {
     }
 
     @PutMapping("guest/changeLocation")
-    public ResponseEntity<GenericResponse<EventDto>> changeLocation(@RequestParam UUID eventUuid, EventUpdatedDto eventUpdatedDto) {
-        return eventService.changeLocation(eventUuid, eventUpdatedDto).GenerateResponse();
+    public ResponseEntity<GenericResponse<EventDto>> changeLocation(@RequestParam UUID eventUuid, UpdatedLocationDto updatedLocationDto) {
+        return eventService.changeLocation(eventUuid, updatedLocationDto).GenerateResponse();
     }
 
     @PutMapping("guest/changePrice")
@@ -100,7 +98,7 @@ public class EventController {
     }
 
     @PutMapping("guest/changeCapacity")
-    public ResponseEntity<GenericResponse<EventDto>> changeCapacity(@RequestParam UUID eventUuid, EventUpdatedDto eventUpdatedDto) {
-        return eventService.changeCapacity(eventUuid, eventUpdatedDto).GenerateResponse();
+    public ResponseEntity<GenericResponse<EventDto>> changeCapacity(@RequestParam UUID eventUuid, UpdateCapacityDto updateCapacityDto) {
+        return eventService.changeCapacity(eventUuid, updateCapacityDto).GenerateResponse();
     }
 }
