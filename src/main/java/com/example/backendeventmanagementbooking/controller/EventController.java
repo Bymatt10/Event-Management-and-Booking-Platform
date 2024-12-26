@@ -82,23 +82,23 @@ public class EventController {
         return eventGuestService.listAllMyEventSubscriptions(PageRequest.of(page, size));
     }
 
-    @PutMapping("guest/changeDate")
+    @PutMapping("change/date")
     public ResponseEntity<GenericResponse<EventDto>> changeDate(@RequestParam UUID eventUuid, UpdateDateDto updateDate) {
         return eventService.changeDate(eventUuid, updateDate).GenerateResponse();
     }
 
-    @PutMapping("guest/changeLocation")
-    public ResponseEntity<GenericResponse<EventDto>> changeLocation(@RequestParam UUID eventUuid, UpdatedLocationDto updatedLocationDto) {
-        return eventService.changeLocation(eventUuid, updatedLocationDto).GenerateResponse();
+    @PutMapping("change/location")
+    public ResponseEntity<GenericResponse<EventDto>> changeLocation(@RequestParam UUID eventUuid, @RequestParam String location) {
+        return eventService.changeLocation(eventUuid, location).GenerateResponse();
     }
 
-    @PutMapping("guest/changePrice")
+    @PutMapping("change/price")
     public ResponseEntity<GenericResponse<EventDto>> changePrice(@RequestParam UUID eventUuid, EventUpdatedDto eventUpdatedDto) {
         return eventService.changePrice(eventUuid, eventUpdatedDto).GenerateResponse();
     }
 
-    @PutMapping("guest/changeCapacity")
-    public ResponseEntity<GenericResponse<EventDto>> changeCapacity(@RequestParam UUID eventUuid, UpdateCapacityDto updateCapacityDto) {
-        return eventService.changeCapacity(eventUuid, updateCapacityDto).GenerateResponse();
+    @PutMapping("change/capacity")
+    public ResponseEntity<GenericResponse<EventDto>> changeCapacity(@RequestParam UUID eventUuid,@RequestParam (defaultValue = "1")int capacity) {
+        return eventService.changeCapacity(eventUuid, capacity).GenerateResponse();
     }
 }

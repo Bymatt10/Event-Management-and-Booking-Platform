@@ -22,10 +22,10 @@ public interface EventService {
 
     GenericResponse<EventDto> changeDate(UUID uuid, UpdateDateDto updateDate);
 
-    GenericResponse<EventDto> changeLocation(UUID uuid, UpdatedLocationDto updatedLocationDto);
+    GenericResponse<EventDto> changeLocation(UUID uuid, String location);
 
     GenericResponse<EventDto> changePrice(UUID uuid, EventUpdatedDto eventUpdatedDto);
 
-    GenericResponse<EventDto> changeCapacity(UUID uuid, UpdateCapacityDto updateCapacityDto);
+    GenericResponse<EventDto> changeCapacity(UUID uuid,int capacity);
 
 }
