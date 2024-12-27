@@ -1,6 +1,4 @@
 package com.example.backendeventmanagementbooking.domain.dto.common;
 
-public record PayPalOrderDto(String brandName,
-        String landingPage,
-        Double value) {
+public record PayPalOrderDto(BankCardDto card, PaypalItemDto item) {
 }

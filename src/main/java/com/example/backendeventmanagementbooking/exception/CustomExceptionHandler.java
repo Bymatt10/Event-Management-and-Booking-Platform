@@ -1,6 +1,11 @@
 package com.example.backendeventmanagementbooking.exception;
 
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paypal.http.exceptions.HttpException;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +20,8 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<GenericResponse<Object>> methodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        return new GenericResponse<>(ex.getBindingResult().getAllErrors().getFirst().getDefaultMessage(), HttpStatus.BAD_REQUEST).GenerateResponse();
+        return new GenericResponse<>(ex.getBindingResult().getAllErrors().getFirst().getDefaultMessage(),
+                HttpStatus.BAD_REQUEST).GenerateResponse();
     }
 
     @ExceptionHandler(AuthException.class)
@@ -30,7 +36,16 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<GenericResponse<Object>> customException(CustomException ex) {
-        log.error("Error: ",ex);
+        log.error("Error: ", ex);
         return ex.getGenericResponse().GenerateResponse();
+    }
+
+    @ExceptionHandler(HttpException.class)
+    public ResponseEntity<GenericResponse<Object>> paypalException(HttpException ex)
+            throws JsonMappingException, JsonProcessingException {
+        log.error("Error: ", ex);
+        return new GenericResponse<>(HttpStatus.BAD_REQUEST,
+                new ObjectMapper().readValue(ex.getMessage(), Object.class))
+            .GenerateResponse();
     }
 }

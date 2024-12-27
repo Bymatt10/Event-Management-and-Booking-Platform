@@ -1,5 +1,27 @@
 package com.example.backendeventmanagementbooking.controller;
 
+import static com.example.backendeventmanagementbooking.enums.QrUsage.RESERVED;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.backendeventmanagementbooking.domain.dto.common.PayPalOrderDto;
 import com.example.backendeventmanagementbooking.domain.dto.common.QrGeneratorDto;
 import com.example.backendeventmanagementbooking.service.AwsService;
@@ -8,20 +30,8 @@ import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.QrGenerator;
 import com.google.common.io.Files;
 import com.luigivismara.shortuuid.ShortUuid;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.UUID;
-
-import static com.example.backendeventmanagementbooking.enums.QrUsage.RESERVED;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 
 @ConditionalOnExpression("${debug:true}")
@@ -84,8 +94,8 @@ public class TestController {
     }
 
     @PostMapping("paypal/payment")
-    public ResponseEntity<Object> testPayPalPayment(@RequestBody String entity) throws IOException {
-        var result = paypalOrder.executeOrder(new PayPalOrderDto("RapidFix", "entity", 200.0000));
+    public ResponseEntity<Object> testPayPalPayment(@RequestBody PayPalOrderDto palOrderDto) throws IOException {
+        var result = paypalOrder.executeOrder(palOrderDto);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
     
