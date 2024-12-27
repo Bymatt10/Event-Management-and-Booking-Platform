@@ -39,6 +39,7 @@ public class EventGuestEntity {
 
     private String verificationCode;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InvitationStatusType invitationStatus = InvitationStatusType.PENDING;

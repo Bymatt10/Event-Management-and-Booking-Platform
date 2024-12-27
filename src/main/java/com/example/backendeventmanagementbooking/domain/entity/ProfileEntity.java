@@ -18,8 +18,8 @@ import java.util.UUID;
 @Entity(name = "profile")
 @DynamicInsert
 @DynamicUpdate
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class ProfileEntity {
 
