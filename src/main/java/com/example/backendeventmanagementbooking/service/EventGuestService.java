@@ -1,16 +1,17 @@
 package com.example.backendeventmanagementbooking.service;
 
+import java.io.IOException;
+import java.util.UUID;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+
 import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
-import jakarta.mail.MessagingException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+import jakarta.mail.MessagingException;
 
 public interface EventGuestService {
 

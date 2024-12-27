@@ -1,7 +1,33 @@
 package com.example.backendeventmanagementbooking.service.Impl;
 
+import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET;
+import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET_UPPER;
+import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.CONFIRMATION_EVENT;
+import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.INVITE_PRIVATE_EVENT;
+import static com.example.backendeventmanagementbooking.enums.EventAccessType.PRIVATE;
+import static com.example.backendeventmanagementbooking.enums.EventAccessType.PUBLIC;
+import static com.example.backendeventmanagementbooking.enums.InvitationStatusType.ACCEPTED;
+import static com.example.backendeventmanagementbooking.enums.InvitationStatusType.DECLINED;
+import static com.example.backendeventmanagementbooking.enums.InvitationStatusType.PENDING;
+import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pageableRepositoryPaginationDto;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.UUID;
+
+import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
 import com.example.backendeventmanagementbooking.domain.dto.common.BuildEmailDto;
-import com.example.backendeventmanagementbooking.domain.dto.request.*;
+import com.example.backendeventmanagementbooking.domain.dto.request.EmailDetailsDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.EventDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.EventUpdatedDto;
+import com.example.backendeventmanagementbooking.domain.dto.request.UpdateDateDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventGuestDto;
 import com.example.backendeventmanagementbooking.domain.dto.response.EventResponseDto;
 import com.example.backendeventmanagementbooking.domain.entity.CategoryEntity;
@@ -23,30 +49,10 @@ import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.PaginationUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luigivismara.shortuuid.ShortUuid;
+
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET;
-import static com.example.backendeventmanagementbooking.config.ConstantsVariables.DEFAULT_ALPHABET_UPPER;
-import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.CONFIRMATION_EVENT;
-import static com.example.backendeventmanagementbooking.enums.EmailFileNameTemplate.INVITE_PRIVATE_EVENT;
-import static com.example.backendeventmanagementbooking.enums.EventAccessType.PRIVATE;
-import static com.example.backendeventmanagementbooking.enums.EventAccessType.PUBLIC;
-import static com.example.backendeventmanagementbooking.enums.InvitationStatusType.*;
-import static com.example.backendeventmanagementbooking.utils.PaginationUtils.pageableRepositoryPaginationDto;
 
 @Service
 @Slf4j

@@ -1,13 +1,16 @@
 package com.example.backendeventmanagementbooking.controller;
 
+import com.example.backendeventmanagementbooking.domain.dto.common.PayPalOrderDto;
 import com.example.backendeventmanagementbooking.domain.dto.common.QrGeneratorDto;
 import com.example.backendeventmanagementbooking.service.AwsService;
+import com.example.backendeventmanagementbooking.service.PaypalOrder;
 import com.example.backendeventmanagementbooking.utils.GenericResponse;
 import com.example.backendeventmanagementbooking.utils.QrGenerator;
 import com.google.common.io.Files;
 import com.luigivismara.shortuuid.ShortUuid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +20,11 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static com.example.backendeventmanagementbooking.enums.QrUsage.RESERVED;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
+
+@ConditionalOnExpression("${debug:true}")
 @RestController
 @RequestMapping("/api/v1/test/")
 @RequiredArgsConstructor
@@ -26,6 +33,8 @@ public class TestController {
     private final QrGenerator qrGenerator;
 
     private final AwsService awsService;
+
+    private final PaypalOrder paypalOrder;
 
     @Value("${s3.bucket.name.qr}")
     private String bucketName;
@@ -73,4 +82,11 @@ public class TestController {
 
         return ResponseEntity.status(genericResponse.getStatus()).body(genericResponse.getData());
     }
+
+    @PostMapping("paypal/payment")
+    public ResponseEntity<Object> testPayPalPayment(@RequestBody String entity) throws IOException {
+        var result = paypalOrder.executeOrder(new PayPalOrderDto("RapidFix", "entity", 200.0000));
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+    
 }
