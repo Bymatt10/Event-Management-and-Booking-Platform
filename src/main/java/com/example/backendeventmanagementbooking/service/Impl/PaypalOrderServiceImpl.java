@@ -97,7 +97,7 @@ public class PaypalOrderServiceImpl implements PaypalOrder {
                                 .type(PaypalTokenType.BILLING_AGREEMENT.name())
                                 .id(result.id());
                 orderCapture.paymentSource(new PaymentSource()
-                                .card(palOrderDto.card().toPaypalCard())
+                                .card(palOrderDto.card().toPaypalCard(securityTools.getCurrentCountryCode()))
                                 .token(token));
 
                 orderCaptureRequest.requestBody(orderCapture);

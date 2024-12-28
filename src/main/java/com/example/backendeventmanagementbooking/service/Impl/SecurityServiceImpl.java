@@ -104,6 +104,8 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     public GenericResponse<UserMeResponseDto> me() {
         var user = securityTools.getCurrentUser();
+        var countryCode = securityTools.getCurrentCountryCode();
+        log.info("Request from country: {}", countryCode);
 
         return new GenericResponse<>(HttpStatus.OK,
                 new UserMeResponseDto(user.getUserId(),
