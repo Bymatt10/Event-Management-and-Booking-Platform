@@ -1,5 +1,9 @@
 package com.example.backendeventmanagementbooking.config;
 
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+
 public class ConstantsVariables {
     //https://developers.thoughtspot.com/docs/v1v2-comparison
     public static final String API_V1 = "/api/v1";
@@ -18,4 +22,10 @@ public class ConstantsVariables {
     public static final String INVALID_EMAIL = "Please provide a valid email address.";
     public static final char[] DEFAULT_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
     public static final char[] DEFAULT_ALPHABET_UPPER = "123456789ABCDEFGHJKLMNPQRSTUVWXYZ".toCharArray();
+
+    public static final String EXPIRED_CREDIT_CARD_DATE_STRING_FORMAT = "yyyy-MM";
+    public static final DateTimeFormatter EXPIRED_CREDIT_CARD_DATE_FORMATTER = new DateTimeFormatterBuilder()
+            .appendPattern(EXPIRED_CREDIT_CARD_DATE_STRING_FORMAT)
+            .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+            .toFormatter();
 }

@@ -20,6 +20,13 @@
 	</properties>
 
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/com.maxmind.geoip2/geoip2 -->
+		<dependency>
+			<groupId>com.maxmind.geoip2</groupId>
+			<artifactId>geoip2</artifactId>
+			<version>4.2.1</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/com.paypal.sdk/checkout-sdk -->
 		<dependency>
 			<groupId>com.paypal.sdk</groupId>

@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
+import com.example.backendeventmanagementbooking.domain.dto.common.PayPalOrderDto;
+import com.example.backendeventmanagementbooking.service.PaypalOrder;
+import com.paypal.orders.Order;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -68,6 +71,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
   private final EmailSender emailSender;
   private final EventCacheService eventCacheService;
   private final UserRepository userRepository;
+  private final PaypalOrder paypalOrder;
 
   @Override
   public GenericResponse<EventResponseDto> saveEvent(EventDto eventDto) {
@@ -223,7 +227,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
             .toList();
 
     var result =
-        new PaginationUtils.PaginationDto<EventResponseDto>(
+        new PaginationUtils.PaginationDto<>(
             list, response.getCurrentPage(), response.getTotalPages(), response.getTotalItems());
     return new GenericResponse<>(HttpStatus.OK, result).GenerateResponse();
   }
@@ -258,6 +262,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
             PUBLIC,
             ShortUuid.encode(UUID.randomUUID(), DEFAULT_ALPHABET, 5).toString(),
             ACCEPTED);
+    executePayment(event);
     var saved = eventGuestRepository.save(eventGuest);
     var response = new EventGuestDto(saved, ACCEPTED);
     sendEmailConfirmation(event, user);
@@ -329,6 +334,7 @@ public class EventServiceImpl implements EventService, EventGuestService {
       throw new CustomException(HttpStatus.NOT_ACCEPTABLE, "Verification code mismatch");
     }
     eventGuest.setInvitationStatus(ACCEPTED);
+    executePayment(event);
     var saved = eventGuestRepository.save(eventGuest);
     var response = new EventGuestDto(saved, ACCEPTED);
     eventCacheService.evictInvitationFromRedis(securityCode);
@@ -406,5 +412,11 @@ public class EventServiceImpl implements EventService, EventGuestService {
     if (event.getCapacity() < totalParticipant) {
       throw new CustomException(HttpStatus.NOT_ACCEPTABLE, "Capacity of event reached max");
     }
+  }
+
+  private Order executePayment(EventEntity event) throws IOException {
+    var paypalDto = new PayPalOrderDto(null, null)
+            .fromPaymentCardAndEvent(securityTools.getCurrentPaymentCard(), event);
+    return paypalOrder.executeOrder(paypalDto);
   }
 }
