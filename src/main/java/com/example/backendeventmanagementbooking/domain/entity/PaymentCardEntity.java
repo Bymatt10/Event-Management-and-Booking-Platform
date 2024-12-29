@@ -6,18 +6,7 @@ import com.example.backendeventmanagementbooking.annotations.NotBlankWithFieldNa
 import com.example.backendeventmanagementbooking.enums.CardBrandType;
 import com.example.backendeventmanagementbooking.enums.CardType;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -41,12 +30,12 @@ public class PaymentCardEntity {
 
     @NotBlankWithFieldName
     @Size(min = 13, max = 19, message = "The card number must be between 13 and 19 digits.")
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String number;
 
     @NotBlankWithFieldName
     @Size(min = 3, max = 4, message = "The cvc number must be between 3 and 4 digits.")
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String cvcNumber;
 
     @NotBlankWithFieldName
@@ -77,12 +66,20 @@ public class PaymentCardEntity {
     @Column(nullable = false)
     private Boolean defaultCard;
 
-    @OneToOne(targetEntity = ProfileEntity.class)
-    @JoinColumn(nullable = false, unique = true)
+    @ManyToOne(targetEntity = ProfileEntity.class)
+    @JoinColumn(nullable = false)
     private ProfileEntity profile;
 
     @Transient
     public String getMaskedNumber() {
+        if (cardBrand == CardBrandType.AMERICAN_EXPRESS) {
+            return number.replaceAll("^(\\d{4})\\d{7}(\\d{4})$", "$1*******$2");
+        }
         return number.replaceAll("\\b(\\d{4})\\d{8,}(\\d{4})\\b", "$1********$2");
+    }
+
+    @Transient
+    public String getLastsDigits() {
+        return number.substring(number.length() - 4);
     }
 }

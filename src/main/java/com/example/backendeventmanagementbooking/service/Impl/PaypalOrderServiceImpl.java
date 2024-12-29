@@ -34,76 +34,76 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class PaypalOrderServiceImpl implements PaypalOrder {
 
-        private final PayPalHttpClient payPalHttpClient;
-        private final SecurityTools securityTools;
+    private final PayPalHttpClient payPalHttpClient;
+    private final SecurityTools securityTools;
 
-        @Override
-        public OrderRequest buildRequestBody(PayPalOrderDto dto) {
-                var user = securityTools.getCurrentUser();
-                var orderRequest = new OrderRequest();
-                orderRequest.checkoutPaymentIntent("CAPTURE");
+    @Override
+    public OrderRequest buildRequestBody(PayPalOrderDto dto) {
+        var user = securityTools.getCurrentUser();
+        var orderRequest = new OrderRequest();
+        orderRequest.checkoutPaymentIntent("CAPTURE");
 
-                var payer = new Payer();
-                payer.email(user.getEmail());
-                payer.name(new Name()
-                                .givenName(user.getProfile().getFullName()));
+        var payer = new Payer();
+        payer.email(user.getEmail());
+        payer.name(new Name()
+                .givenName(user.getProfile().getFullName()));
 
-                var amount = new AmountWithBreakdown()
-                                .currencyCode("USD")
-                                .value(String.valueOf(dto.item().unitPrice()));
+        var amount = new AmountWithBreakdown()
+                .currencyCode("EUR")
+                .value(String.valueOf(dto.item().unitPrice()));
 
-                orderRequest.payer(payer);
-                orderRequest.applicationContext(new ApplicationContext());
+        orderRequest.payer(payer);
+        orderRequest.applicationContext(new ApplicationContext());
 
-                var purchaseUnits = new PurchaseUnitRequest();
+        var purchaseUnits = new PurchaseUnitRequest();
 
-                var item = new Item();
-                item.name(dto.item().name());
-                item.description(dto.item().description());
-                item.sku(dto.item().sku());
-                item.quantity(dto.item().quantity().toString());
+        var item = new Item();
+        item.name(dto.item().name());
+        item.description(dto.item().description());
+        item.sku(dto.item().sku());
+        item.quantity(dto.item().quantity().toString());
 
-                var unitAmount = new Money()
-                                .currencyCode(amount.currencyCode())
-                                .value(String.valueOf(dto.item().unitPrice()));
-                item.unitAmount(unitAmount);
+        var unitAmount = new Money()
+                .currencyCode(amount.currencyCode())
+                .value(String.valueOf(dto.item().unitPrice()));
+        item.unitAmount(unitAmount);
 
-                var amountBreakdown = new AmountBreakdown();
-                amountBreakdown.itemTotal(unitAmount);
+        var amountBreakdown = new AmountBreakdown();
+        amountBreakdown.itemTotal(unitAmount);
 
-                amount.amountBreakdown(amountBreakdown);
+        amount.amountBreakdown(amountBreakdown);
 
-                purchaseUnits.items(List.of(item));
-                purchaseUnits.amountWithBreakdown(amount);
-                
+        purchaseUnits.items(List.of(item));
+        purchaseUnits.amountWithBreakdown(amount);
 
-                orderRequest.purchaseUnits(List.of(purchaseUnits));
 
-                return orderRequest;
-        }
+        orderRequest.purchaseUnits(List.of(purchaseUnits));
 
-        @Override
-        public Order executeOrder(PayPalOrderDto palOrderDto) throws IOException {
-                var request = new OrdersCreateRequest().requestBody(this.buildRequestBody(palOrderDto));
+        return orderRequest;
+    }
 
-                var result = payPalHttpClient
-                                .execute(request)
-                                .result();
+    @Override
+    public Order executeOrder(PayPalOrderDto palOrderDto) throws IOException {
+        var request = new OrdersCreateRequest().requestBody(this.buildRequestBody(palOrderDto));
 
-                var orderCaptureRequest = new OrdersCaptureRequest(result.id());
-                var orderCapture = new OrderCaptureRequest();
+        var result = payPalHttpClient
+                .execute(request)
+                .result();
 
-                var token = new Token()
-                                .type(PaypalTokenType.BILLING_AGREEMENT.name())
-                                .id(result.id());
-                orderCapture.paymentSource(new PaymentSource()
-                                .card(palOrderDto.card().toPaypalCard(securityTools.getCurrentCountryCode()))
-                                .token(token));
+        var orderCaptureRequest = new OrdersCaptureRequest(result.id());
+        var orderCapture = new OrderCaptureRequest();
 
-                orderCaptureRequest.requestBody(orderCapture);
-                var complete = payPalHttpClient.execute(orderCaptureRequest);
+        var token = new Token()
+                .type(PaypalTokenType.BILLING_AGREEMENT.name())
+                .id(result.id());
+        orderCapture.paymentSource(new PaymentSource()
+                .card(palOrderDto.card().toPaypalCard(securityTools.getCurrentCountryCode()))
+                .token(token));
 
-                return complete.result();
-        }
+        orderCaptureRequest.requestBody(orderCapture);
+        var complete = payPalHttpClient.execute(orderCaptureRequest);
+        log.info("Payment complete {}", complete.result());
+        return complete.result();
+    }
 
 }

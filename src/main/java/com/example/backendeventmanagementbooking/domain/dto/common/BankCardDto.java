@@ -7,13 +7,19 @@ import com.example.backendeventmanagementbooking.enums.CardType;
 import com.example.backendeventmanagementbooking.utils.CreditCardValidator;
 import com.paypal.orders.AddressPortable;
 import com.paypal.orders.Card;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 import static com.example.backendeventmanagementbooking.config.ConstantsVariables.EXPIRED_CREDIT_CARD_DATE_FORMATTER;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class BankCardDto {
     @NotBlankWithFieldName
     private CardType cardType;
