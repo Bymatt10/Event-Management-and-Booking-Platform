@@ -49,7 +49,7 @@ public class PaypalOrderServiceImpl implements PaypalOrder {
                 .givenName(user.getProfile().getFullName()));
 
         var amount = new AmountWithBreakdown()
-                .currencyCode("EUR")
+                .currencyCode("USD")
                 .value(String.valueOf(dto.item().unitPrice()));
 
         orderRequest.payer(payer);
